@@ -1,49 +1,68 @@
 import {createStore} from "vuex";
 import router from "@/router";
+import api from "@/api";
 
 export default createStore({
   state: {
-    account: {
-      verified: false,
-      role: "undenified",
-    },
-
-    choosing: false,
+    user: null,
+    token: localStorage.getItem("token") || null,
+  },
+  getters: {
+    isLogged: (state) => !!state.user,
+    userRole: (state) => state.user?.role || "guest",
   },
   mutations: {
-    async LOGIN(state, role) {
-      state.account.verified = true;
-      state.account.role = role;
+    SET_USER(state, user) {
+      state.user = user;
+    },
+    SET_TOKEN(state, token) {
+      state.token = token;
+      if (token) {
+        localStorage.setItem("token", token);
+      } else {
+        localStorage.removeItem("token");
+      }
+    },
+    LOGOUT(state) {
+      state.user = null;
+      state.token = null;
+      localStorage.removeItem("token");
     },
   },
   actions: {
-    async fetchAccount({commit}) {
-      console.log("Начало верификации пользователя");
+    // Экшен для логина
+    async login({commit}, credentials) {
+      try {
+        const response = await api.login(credentials);
 
-      const response = await fetch(
-        "https://localhost:8000/api/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            login: login,
-            password: password,
-          }),
-        },
-      );
+        const {user, access_token} = response.data;
+        commit("SET_USER", user);
+        commit("SET_TOKEN", access_token);
 
-      const data = await response.json();
-
-      if (data.status === 400) {
-        return 400;
+        router.push("/dashboard");
+        return Promise.resolve(user);
+      } catch (error) {
+        console.error("Login failed:", error);
+        return Promise.reject(error);
       }
-
-      console.log(data.data);
-      commit("LOGIN", data.data); //data.data = password
-
-      return 0;
     },
+    // Экшен для выхода
+    async logout({commit}) {
+      commit("LOGOUT");
+      router.push("/login");
+    },
+    // Экшен для проверки и восстановления сессии (например, при загрузке приложения)
+    // async restoreSession({commit}) {
+    //   const token = localStorage.getItem("token");
+    //   if (token) {
+    //     try {
+    //       const response = await api.getMe(); // запрос к /users/me
+    //       commit("SET_USER", response.data);
+    //       commit("SET_TOKEN", token);
+    //     } catch {
+    //       commit("LOGOUT");
+    //     }
+    //   }
+    // },
   },
 });

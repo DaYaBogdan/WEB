@@ -1,0 +1,95 @@
+@mixin fire-gradient($start: #FF4D00, $middle: #FF8C00, $end: #FFD800) 
+  background: linear-gradient(45deg, $start, $middle, $end)
+
+@mixin fire-gradient-text($start: #FF4D00, $middle: #FF8C00, $end: #FFD800) 
+  background: linear-gradient(45deg, $start, $middle, $end)
+  background-clip: text
+  -webkit-background-clip: text
+  color: transparent
+
+
+.phoenix-accent 
+  @include fire-gradient(var(--primary), var(--secondary), var(--accent))
+
+.phoenix-accent-text
+  @include fire-gradient-text(var(--primary), var(--secondary), var(--accent))
+
+.flex
+  display: flex
+  flex-direction: row
+  gap: 2em
+
+  &::before,
+  &::after
+    content: ''
+
+.column
+  @extend  .flex
+  flex-direction: column
+
+:root
+  --primary: #E33B1F
+  --secondary: #FF6A13
+  --accent: #FFB347
+  --error: #6f0a03
+  --accept: #168019
+  --sidebar-width: 300px
+  --font: "Fira sans", sans-serif
+
+*
+  margin: 0
+  padding: 0
+  box-sizing: border-box
+  font-family: var(--font)
+
+body
+  background: var(--light)
+
+// button
+//   cursor: pointer
+//   appearance: none
+//   border: none
+//   outline: none
+//   background: none
+
+.app
+    display: flex
+
+    main
+      flex: 1 1 0
+      padding: 2rem
+
+      @media (max-width: 768px)
+        padding-left: 6rem
+
+.bordered
+    padding: 7px
+    border-radius: 12px
+    border: 3px solid var(--secondary)
+
+input
+    min-width: 400px
+    max-width: 600px
+
+button
+    min-width: 200px
+    min-width: 400px
+
+.filled
+    padding: 15px
+    @extend .phoenix-accent
+
+.horizontal-align
+    text-align: center
+    justify-content: center
+
+.vertical-align
+    margin:0
+    display: flex
+    height: 100vh
+    // min-width: 400px
+    align-items: center
+
+.material-icons
+    font-size: 5rem
+    color: var(--primary)

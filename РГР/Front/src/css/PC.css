@@ -1,0 +1,75 @@
+.phoenix-accent, .filled {
+  background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+}
+
+.flex, .column {
+  display: flex;
+  flex-direction: row;
+  gap: 2em;
+}
+.flex::before, .column::before, .flex::after, .column::after {
+  content: "";
+}
+
+.column {
+  flex-direction: column;
+}
+
+:root {
+  --primary: #E33B1F;
+  --secondary: #FF6A13;
+  --accent: #FFB347;
+  --error: #6f0a03;
+  --accept: #168019;
+  --sidebar-width: 300px;
+  --font: "Fira sans", sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font);
+}
+
+body {
+  background: var(--light);
+}
+
+.app {
+  display: flex;
+}
+.app main {
+  flex: 1 1 0;
+  padding: 2rem;
+}
+@media (max-width: 768px) {
+  .app main {
+    padding-left: 6rem;
+  }
+}
+
+.bordered {
+  padding: 7px;
+  border-radius: 12px;
+  border: 3px solid var(--secondary);
+}
+
+.filled {
+  padding: 15px;
+}
+
+.centered {
+  text-align: center;
+  justify-content: center;
+}
+
+.vertical {
+  height: 100vh;
+  align-items: center;
+}
+
+.material-icons {
+  font-size: 5rem;
+  color: var(--primary);
+}/*# sourceMappingURL=PC.css.map */

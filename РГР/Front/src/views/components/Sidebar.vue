@@ -17,18 +17,18 @@ const ToggleMenu = () => {
 <template>
   <aside :class="`${is_expanded && 'is-expanded'}`">
     <div class="logo">
-      <img src="/favicon.ico" alt="Vue" />
+      <img src="/phoenix.ico" alt="Vue" />
     </div>
-    <div class="menu-toggle-wrap">
+    <!-- <div class="menu-toggle-wrap">
       <button class="menu-toggle" @click="ToggleMenu">
         <span class="material-icons"
           >keyboard_double_arrow_right</span
         >
       </button>
-    </div>
+    </div> -->
     <div class="menu">
       <h3>Меню</h3>
-      <RouterLink class="button" :to="{name: 'Заказы'}"
+      <RouterLink class="button" :to="{name: 'Diary'}"
         ><span class="material-icons"> home </span>
         <span class="text">Главная страница</span>
       </RouterLink>
@@ -84,7 +84,7 @@ aside {
 
       .material-icons {
         font-size: 2rem;
-        color: var(--light);
+        color: var(--primary);
       }
 
       &:hover {
