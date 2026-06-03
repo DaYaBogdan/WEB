@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:8000/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -9,48 +11,47 @@ const apiClient = axios.create({
 });
 
 //----------------------------------------------------------------------------
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem("authToken");
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error),
-// );
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
-apiClient.interceptors.request.use((config) => {
-  console.log(
-    `Отправка запроса: ${config.method?.toUpperCase()} ${config.url}`,
-  );
-  return config;
-});
+// apiClient.interceptors.request.use((config) => {
+//   console.log(
+//     `Отправка запроса: ${config.method?.toUpperCase()} ${config.url}`,
+//   );
+//   return config;
+// });
 
 //----------------------------------------------------------------------------
 export default {
-  // Запрос на получение юзера
+  // Логин
   login(credentials) {
-    return apiClient.post("/login", credentials);
+    return apiClient.post("auth/login", credentials);
   },
-  // Все посты
-  getPosts() {
-    return apiClient.get("/posts");
+  // Регистрация
+  register(credentials) {
+    return apiClient.post("auth/register", credentials);
   },
-  // Один пост по ID
-  getPost(id) {
-    return apiClient.get(`/posts/${id}`);
+  createTask(taskData) {
+    return apiClient.post("diary/pushTask", taskData);
   },
-  // Создать новый пост
-  createPost(postData) {
-    return apiClient.post("/posts", postData);
+  // Получение задач
+  getTasks(userID) {
+    return apiClient.get(`diary/getTasks/${userID}`);
   },
-  // Обновить пост
-  updatePost(id, postData) {
-    return apiClient.put(`/posts/${id}`, postData);
+  deleteTask(taskId) {
+    return apiClient.delete(`diary/deleteTask/${taskId}`);
   },
-  // Удалить пост
-  deletePost(id) {
-    return apiClient.delete(`/posts/${id}`);
+  getCustomers() {
+    return apiClient.get("managing/getAllClients", {
+      params: {skip: 0, limit: 100},
+    });
   },
 };

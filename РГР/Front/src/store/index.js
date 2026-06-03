@@ -4,16 +4,63 @@ import api from "@/api";
 
 export default createStore({
   state: {
-    user: null,
+    user: (() => {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          return JSON.parse(userStr);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    })(),
     token: localStorage.getItem("token") || null,
+    tasks: (() => {
+      const tasksStr = localStorage.getItem("tasks");
+      if (tasksStr) {
+        try {
+          return JSON.parse(tasksStr);
+        } catch (e) {
+          return [];
+        }
+      }
+      return [];
+    })(),
+    customers: (() => {
+      const customersStr = localStorage.getItem("customers");
+      if (customersStr) {
+        try {
+          return JSON.parse(customersStr);
+        } catch (e) {
+          return [];
+        }
+      }
+      return [];
+    })(),
+    selectedTaskIds: [],
+    isLoading: false,
+    error: null,
   },
   getters: {
     isLogged: (state) => !!state.user,
     userRole: (state) => state.user?.role || "guest",
+    getTasks: (state) => state.tasks,
+    getCustomers: (state) => state.customers,
+    isLoading: (state) => state.isLoading,
+    getError: (state) => state.error,
+    getSelectedTaskIds: (state) => state.selectedTaskIds,
+    getSelectedTasksCount: (state) =>
+      state.selectedTaskIds.length,
   },
   mutations: {
     SET_USER(state, user) {
       state.user = user;
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("user");
+      }
     },
     SET_TOKEN(state, token) {
       state.token = token;
@@ -23,14 +70,61 @@ export default createStore({
         localStorage.removeItem("token");
       }
     },
+    SET_TASKS(state, tasks) {
+      state.tasks = tasks;
+      if (tasks && tasks.length > 0) {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      } else {
+        localStorage.removeItem("tasks");
+      }
+    },
+    SET_CUSTOMERS(state, customers) {
+      state.customers = customers;
+      if (customers && customers.length > 0) {
+        localStorage.setItem(
+          "customers",
+          JSON.stringify(customers),
+        );
+      } else {
+        localStorage.removeItem("customers");
+      }
+    },
+    ADD_SELECTED_TASK(state, taskId) {
+      if (!state.selectedTaskIds.includes(taskId)) {
+        state.selectedTaskIds.push(taskId);
+      }
+    },
+    REMOVE_SELECTED_TASK(state, taskId) {
+      const index = state.selectedTaskIds.indexOf(taskId);
+      if (index !== -1) {
+        state.selectedTaskIds.splice(index, 1);
+      }
+    },
+    CLEAR_SELECTED_TASKS(state) {
+      state.selectedTaskIds = [];
+    },
+    SET_SELECTED_TASKS(state, taskIds) {
+      state.selectedTaskIds = taskIds;
+    },
+    SET_LOADING(state, isLoading) {
+      state.isLoading = isLoading;
+    },
+    SET_ERROR(state, error) {
+      state.error = error;
+    },
     LOGOUT(state) {
       state.user = null;
       state.token = null;
+      state.tasks = [];
+      state.customers = [];
+      state.selectedTaskIds = [];
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("tasks");
+      localStorage.removeItem("customers");
     },
   },
   actions: {
-    // Экшен для логина
     async login({commit}, credentials) {
       try {
         const response = await api.login(credentials);
@@ -39,30 +133,140 @@ export default createStore({
         commit("SET_USER", user);
         commit("SET_TOKEN", access_token);
 
-        router.push("/dashboard");
+        router.push("/Diary");
         return Promise.resolve(user);
       } catch (error) {
         console.error("Login failed:", error);
         return Promise.reject(error);
       }
     },
-    // Экшен для выхода
+    async getTasks({commit, state}) {
+      try {
+        if (!state.user?.id) {
+          console.error("User login not found");
+          return Promise.reject(
+            new Error("User not authenticated"),
+          );
+        }
+
+        const response = await api.getTasks(state.user.id);
+
+        const tasks = response.data.tasks || [];
+
+        const tasksWithDateAndTime =
+          addDateAndTimeToTasks(tasks);
+
+        commit("SET_TASKS", tasksWithDateAndTime);
+        return Promise.resolve(tasksWithDateAndTime);
+      } catch (error) {
+        console.error("Failed to fetch tasks:", error);
+        commit("SET_TASKS", []);
+        return Promise.reject(error);
+      }
+    },
+    async getClients({commit, state}) {
+      try {
+        if (!state.user?.id) {
+          console.error("User login not found");
+          return Promise.reject(
+            new Error("User not authenticated"),
+          );
+        }
+
+        const response = await api.getCustomers();
+
+        const customers = response.data || [];
+
+        commit("SET_CUSTOMERS", customers);
+        return Promise.resolve(customers);
+      } catch (error) {
+        console.error("Failed to fetch tasks:", error);
+        commit("SET_CUSTOMERS", []);
+        return Promise.reject(error);
+      }
+    },
+    toggleTaskSelection({commit}, taskId) {
+      commit("ADD_SELECTED_TASK", taskId);
+    },
+    removeTaskSelection({commit}, taskId) {
+      commit("REMOVE_SELECTED_TASK", taskId);
+    },
+    clearSelectedTasks({commit}) {
+      commit("CLEAR_SELECTED_TASKS");
+    },
+    async deleteSelectedTasks({commit, state, dispatch}) {
+      if (state.selectedTaskIds.length === 0) {
+        throw new Error("Выберите задачи для удаления");
+      }
+
+      const confirmed = confirm(
+        `Удалить ${state.selectedTaskIds.length} задачу(и)?`,
+      );
+      if (!confirmed) return;
+
+      commit("SET_LOADING", true);
+      commit("SET_ERROR", null);
+
+      try {
+        // Удаляем все выбранные задачи
+        await Promise.all(
+          state.selectedTaskIds.map((id) =>
+            api.deleteTask(id),
+          ),
+        );
+
+        // Перезагружаем задачи
+        await dispatch("getTasks");
+
+        // Очищаем выбор
+        commit("CLEAR_SELECTED_TASKS");
+
+        console.log(
+          `Deleted ${state.selectedTaskIds.length} tasks`,
+        );
+      } catch (error) {
+        console.error("Failed to delete tasks:", error);
+        commit("SET_ERROR", error.message);
+        throw error;
+      } finally {
+        commit("SET_LOADING", false);
+      }
+    },
     async logout({commit}) {
       commit("LOGOUT");
-      router.push("/login");
+      router.push("/");
     },
-    // Экшен для проверки и восстановления сессии (например, при загрузке приложения)
-    // async restoreSession({commit}) {
-    //   const token = localStorage.getItem("token");
-    //   if (token) {
-    //     try {
-    //       const response = await api.getMe(); // запрос к /users/me
-    //       commit("SET_USER", response.data);
-    //       commit("SET_TOKEN", token);
-    //     } catch {
-    //       commit("LOGOUT");
-    //     }
-    //   }
-    // },
+    async restoreSession({commit}) {
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      const storedTasks = localStorage.getItem("tasks");
+      if (token && storedUser) {
+        commit("SET_TOKEN", token);
+        commit("SET_USER", JSON.parse(storedUser));
+        if (storedTasks) {
+          commit("SET_TASKS", JSON.parse(storedTasks));
+        }
+      } else {
+        commit("LOGOUT");
+      }
+    },
   },
 });
+
+function addDateAndTimeToTasks(tasks) {
+  return tasks.map((task) => ({
+    ...task,
+    date:
+      task.dateTime ?
+        new Date(task.dateTime).toISOString().split("T")[0]
+      : null,
+    time:
+      task.dateTime ?
+        new Date(task.dateTime).toLocaleTimeString("ru-RU", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      : null,
+  }));
+}

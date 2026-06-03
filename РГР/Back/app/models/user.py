@@ -5,5 +5,7 @@ from sqlalchemy import String, Column
 class User(BaseModel):
     __tablename__ = "users"
     
-    email = Column(String, unique=True, index=True)
+    login = Column(String, unique=True, index=True)
     password = Column(String)
+    role = Column(String)
+    token = Column(String)

@@ -15,25 +15,29 @@ const login = async () => {
 </script>
 
 <template>
-  <main class="column horizontal-align vertical-align">
+  <main
+    class="column horizontal-align vertical-align without-sidebar"
+  >
     <span class="material-icons"> account_circle </span>
-    <form>
+    <form @submit.prevent="login">
       <div class="column">
         <input
           class="bordered"
           placeholder="login"
           type="text"
+          v-model="form.login"
         />
         <input
           class="bordered"
           placeholder="password"
           type="password"
+          v-model="form.password"
         />
       </div>
       <button
         class="bordered filled"
         style="min-width: 30%"
-        v-on:click="login()"
+        type="submit"
       >
         Вход
       </button>
