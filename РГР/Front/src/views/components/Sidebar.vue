@@ -17,6 +17,15 @@ const ToggleMenu = () => {
 
   localStorage.setItem("is_expanded", is_expanded.value);
 };
+
+const logout = async () => {
+  try {
+    await store.dispatch("logout");
+    console.log("Tasks loaded:", tasks.value);
+  } catch (error) {
+    console.error("Failed to load tasks:", error);
+  }
+};
 </script>
 
 <template>
@@ -38,23 +47,29 @@ const ToggleMenu = () => {
         <span class="text">Главная страница</span>
       </RouterLink>
 
-      <RouterLink class="button" :to="{name: 'AddClient'}"
+      <RouterLink class="button" :to="{name: 'Clients'}"
         ><span class="material-icons"> group </span>
         <span class="text">Список клиентов</span>
       </RouterLink>
 
       <div v-if="adminPanelState">
-        <!-- <hr /> -->
-        <h3 style="margin-top: 20px">Панель админа</h3>
-        <!-- <hr /> -->
-
-        <RouterLink class="button" :to="{name: 'Register'}"
+        <hr />
+        <RouterLink class="button" :to="{name: 'Masters'}"
           ><span class="material-icons">
             supervisor_account
           </span>
           <span class="text">Мастера</span>
         </RouterLink>
+        <RouterLink class="button" :to="{name: 'AllTasks'}"
+          ><span class="material-icons"> event_note </span>
+          <span class="text">Все записи</span>
+        </RouterLink>
       </div>
+
+      <button class="button" @click="logout" style="">
+        <span class="material-icons">logout</span>
+        <span class="text">Выход</span>
+      </button>
     </div>
 
     <div class="flex"></div>

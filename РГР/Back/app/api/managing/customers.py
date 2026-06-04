@@ -1,9 +1,9 @@
 # app/routers/customers.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from app.database import get_db
-from app.models.customer import Customer
+from app.models.__init__ import Customer, Task
 from app.schemas.Customer import CustomerCreate, CustomerUpdate, CustomerResponse
 
 router = APIRouter()
@@ -126,6 +126,10 @@ async def delete_customer(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Customer not found"
         )
+    
+    await db.execute(
+        delete(Task).where(Task.customer_id == customer_id)
+    )
     
     await db.delete(customer)
     await db.commit()

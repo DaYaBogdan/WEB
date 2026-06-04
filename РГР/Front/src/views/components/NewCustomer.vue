@@ -2,7 +2,7 @@
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="phoenix-accent-text">Создание записи</h2>
+        <h2 class="phoenix-accent-text">Добавление клиента</h2>
         <button class="close-btn" @click="closeModal">
           <span class="material-icons">close</span>
         </button>
@@ -10,86 +10,32 @@
 
       <form @submit.prevent="submitForm">
         <div class="form-group">
-          <label for="customer">Клиент</label>
-          <select
-            id="customer"
-            v-model="form.customer_id"
-            required
-            :class="{error: errors.customer_id}"
-          >
-            <option value="">Выберите клиента</option>
-            <option
-              v-for="customer in customers"
-              :key="customer.id"
-              :value="customer.id"
-            >
-              {{ customer.FIO }} ({{ customer.phone }})
-            </option>
-          </select>
-          <span v-if="errors.customer_id" class="error-text">{{
-            errors.customer_id
-          }}</span>
-        </div>
-
-        <div class="form-group">
-          <label for="service">Услуга</label>
+          <label for="service">Фамилия Имя Отчество</label>
           <input
-            id="service"
+            id="FIO"
             type="text"
-            v-model="form.service"
-            placeholder="Например: Маникюр, Стрижка и т.д."
+            v-model="form.fio"
+            placeholder="Например: Иваненко Иван Иванович"
             required
-            :class="{error: errors.service}"
+            :class="{error: errors.fio}"
           />
-          <span v-if="errors.service" class="error-text">{{
-            errors.service
+          <span v-if="errors.fio" class="error-text">{{
+            errors.fio
           }}</span>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="date">Дата</label>
-            <input
-              id="date"
-              type="date"
-              v-model="form.date"
-              required
-              :class="{error: errors.date}"
-            />
-            <span v-if="errors.date" class="error-text">{{
-              errors.date
-            }}</span>
-          </div>
-
-          <div class="form-group">
-            <label for="time">Время</label>
-            <input
-              id="time"
-              type="time"
-              v-model="form.time"
-              required
-              :class="{error: errors.time}"
-            />
-            <span v-if="errors.time" class="error-text">{{
-              errors.time
-            }}</span>
-          </div>
-        </div>
-
         <div class="form-group">
-          <label for="cost">Стоимость (₽)</label>
+          <label for="service">Телефон</label>
           <input
-            id="cost"
-            type="number"
-            v-model="form.cost"
-            placeholder="Например: 2000"
+            id="Phone"
+            type="text"
+            v-model="form.phone"
+            placeholder="Например: +79792341234"
             required
-            min="0"
-            step="100"
-            :class="{error: errors.cost}"
+            :class="{error: errors.phone}"
           />
-          <span v-if="errors.cost" class="error-text">{{
-            errors.cost
+          <span v-if="errors.phone" class="error-text">{{
+            errors.phone
           }}</span>
         </div>
 
@@ -107,7 +53,7 @@
             :disabled="isLoading"
           >
             <span v-if="isLoading" class="spinner"></span>
-            <span v-else>Создать запись</span>
+            <span v-else>Добавить Клиента</span>
           </button>
         </div>
       </form>
@@ -116,82 +62,35 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from "vue";
-import {useStore} from "vuex";
+import {ref} from "vue";
 import api from "@/api";
-
-const props = defineProps({
-  masterId: {
-    type: Number,
-    required: true,
-  },
-});
 
 const emit = defineEmits(["close", "success"]);
 
-const store = useStore();
-const customers = computed(
-  () => store.getters.getCustomers || [],
-);
-
 // Форма
 const form = ref({
-  customer_id: "",
-  service: "",
-  date: "",
-  time: "",
-  cost: "",
+  customer_fio: "",
+  customer_phone: "",
 });
 
 // Ошибки валидации
 const errors = ref({});
 const isLoading = ref(false);
 
-// Загружаем клиентов если их нет
-onMounted(async () => {
-  if (customers.value.length === 0) {
-    await store.dispatch("getClients");
-  }
-});
-
 // Валидация формы
 const validateForm = () => {
   const newErrors = {};
 
-  if (!form.value.customer_id) {
-    newErrors.customer_id = "Выберите клиента";
+  if (!form.value.fio) {
+    newErrors.fio = "Введите ФИО клиента";
   }
 
   if (
-    !form.value.service ||
-    form.value.service.trim().length < 2
+    !form.value.phone ||
+    !/^\+7\d{10}$/.test(form.value.phone.trim())
   ) {
     newErrors.service =
-      "Введите название услуги (минимум 2 символа)";
-  }
-
-  if (!form.value.date) {
-    newErrors.date = "Выберите дату";
-  } else {
-    const selectedDate = new Date(form.value.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (selectedDate < today) {
-      newErrors.date = "Дата не может быть в прошлом";
-    }
-  }
-
-  if (!form.value.time) {
-    newErrors.time = "Выберите время";
-  }
-
-  if (!form.value.cost) {
-    newErrors.cost = "Введите стоимость";
-  } else if (form.value.cost < 0) {
-    newErrors.cost = "Стоимость не может быть отрицательной";
-  } else if (form.value.cost > 100000) {
-    newErrors.cost = "Слишком большая сумма (макс. 100 000 ₽)";
+      "Введите номер телефона (формат +7XXXXXXXXXX, всего 12 символов)";
   }
 
   errors.value = newErrors;
@@ -205,33 +104,25 @@ const submitForm = async () => {
   isLoading.value = true;
 
   try {
-    // Формируем datetime из date и time
-    const dateTime = new Date(
-      `${form.value.date}T${form.value.time}`,
-    );
-
     // Создаем объект задачи
-    const taskData = {
-      customer_id: parseInt(form.value.customer_id),
-      master_id: props.masterId,
-      service: form.value.service.trim(),
-      datetime: dateTime.toISOString(),
-      cost: parseInt(form.value.cost),
+    const customerData = {
+      FIO: form.value.fio.trim(),
+      phone: form.value.phone.trim(),
     };
 
     // Отправляем запрос на сервер
-    const response = await api.createTask(taskData);
+    const response = await api.addCustomer(customerData);
 
     // Успех - закрываем модалку и обновляем список
     emit("success", response.data);
     closeModal();
   } catch (error) {
-    console.error("Failed to create task:", error);
+    console.error("Failed to addCustomer:", error);
     if (error.response?.data?.detail) {
       alert("Ошибка: " + error.response.data.detail);
     } else {
       alert(
-        "Не удалось создать запись. Проверьте подключение к интернету.",
+        "Не удалось Добавить клиента. Проверьте подключение к интернету.",
       );
     }
   } finally {

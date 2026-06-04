@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from app.database import get_db
 
-from ...models import User, Task, Customer
+from ...models import User, Task, Customer, Weekend
 from app.schemas.Task import TaskCreate, TaskResponse, TaskUpdate
 
 router = APIRouter()
@@ -16,6 +16,7 @@ async def pushTask(
     db: AsyncSession = Depends(get_db)
 ):
     try:
+        
         # Проверяем, существует ли customer
         pre_query_customer = select(Customer).where(Customer.id == task_data.customer_id)
         customer = await db.execute(pre_query_customer)
@@ -27,6 +28,31 @@ async def pushTask(
         master = await db.execute(pre_query_master)
         if not master.scalar_one_or_none():
             raise HTTPException(status_code=404, detail="Master not found")
+        
+        # Проверяем, существует ли weekends на эту же дату 
+        
+        LOCAL_TIMEZONE = timezone(timedelta(hours=3))
+        
+        if task_data.datetime.tzinfo is None:
+            # Если время без часового пояса, считаем что это UTC
+            utc_time = task_data.datetime.replace(tzinfo=timezone.utc)
+        else:
+            utc_time = task_data.datetime
+            
+        local_time = utc_time.astimezone(LOCAL_TIMEZONE)
+        
+        # Берём дату из локального времени
+        task_date = local_time.date()
+        
+        pre_query_weekend = select(Weekend).where(Weekend.date == task_date)
+        weekend_result = await db.execute(pre_query_weekend)
+        existing_weekend = weekend_result.scalar_one_or_none()
+        
+        if existing_weekend:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Cannot create task on weekend date: {task_date}"
+            )
         
         # Создаём новую задачу
         new_task = Task(
@@ -58,7 +84,7 @@ async def getTasks(
     user_id: int,
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(Task).where(Task.master_id == user_id)
+    query = select(Task).where(Task.master_id == user_id).order_by(Task.dateTime)
     result = await db.execute(query)
     tasks = result.scalars().all()  # используйте scalars() вместо all()
     

@@ -2,8 +2,9 @@ import {createRouter, createWebHistory} from "vue-router";
 import ErrorPage from "@/views/templates/ErrorPage.vue";
 import Login from "@/views/templates/Login.vue";
 import Diary from "@/views/templates/Diary.vue";
-import Register from "@/views/templates/admin/Register.vue";
-import AddClient from "@/views/templates/AddClient.vue";
+import Clients from "@/views/templates/Clients.vue";
+import Masters from "@/views/templates/admin/Masters.vue";
+import AllTasks from "@/views/templates/admin/AllTasks.vue";
 
 const routes = [
   {
@@ -17,9 +18,14 @@ const routes = [
     component: Login,
   },
   {
-    path: "/Register",
-    name: "Register",
-    component: Register,
+    path: "/Masters",
+    name: "Masters",
+    component: Masters,
+  },
+  {
+    path: "/AllTasks",
+    name: "AllTasks",
+    component: AllTasks,
   },
   {
     path: "/Diary",
@@ -27,9 +33,9 @@ const routes = [
     component: Diary,
   },
   {
-    path: "/AddClient",
-    name: "AddClient",
-    component: AddClient,
+    path: "/Clients",
+    name: "Clients",
+    component: Clients,
   },
 ];
 

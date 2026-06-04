@@ -1,12 +1,17 @@
 import {defineConfig} from "vite";
 import vue from "@vitejs/plugin-vue";
 import {VitePWA} from "vite-plugin-pwa";
-import {fileURLToPath, URL} from "url"; // ← Добавьте этот импорт
+import {fileURLToPath, URL} from "url";
+import VueDevTools from "vite-plugin-vue-devtools";
 
 export default defineConfig({
   plugins: [
     vue(),
+    VueDevTools(), //-------- Потом отрубить
     VitePWA({
+      devOptions: {
+        enabled: false, // Пока отрублено
+      },
       registerType: "autoUpdate",
       includeAssets: [
         "phoenix_144x144.png",
