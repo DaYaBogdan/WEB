@@ -38,6 +38,17 @@ export default createStore({
       }
       return [];
     })(),
+    weekends: (() => {
+      const weekendStr = localStorage.getItem("weekends");
+      if (weekendStr) {
+        try {
+          return JSON.parse(weekendStr);
+        } catch (e) {
+          return [];
+        }
+      }
+      return [];
+    })(),
     selectedTaskIds: [],
     isLoading: false,
     error: null,
@@ -47,6 +58,7 @@ export default createStore({
     userRole: (state) => state.user?.role || "guest",
     getTasks: (state) => state.tasks,
     getCustomers: (state) => state.customers,
+    getWeekends: (state) => state.weekends,
     isLoading: (state) => state.isLoading,
     getError: (state) => state.error,
     getSelectedTaskIds: (state) => state.selectedTaskIds,
@@ -54,14 +66,7 @@ export default createStore({
       state.selectedTaskIds.length,
   },
   mutations: {
-    SET_USER(state, user) {
-      state.user = user;
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
-      } else {
-        localStorage.removeItem("user");
-      }
-    },
+    //--------------------------------------------
     SET_TOKEN(state, token) {
       state.token = token;
       if (token) {
@@ -89,6 +94,18 @@ export default createStore({
         localStorage.removeItem("customers");
       }
     },
+    SET_WEEKENDS(state, weekends) {
+      state.weekends = weekends;
+      if (weekends && weekends.length > 0) {
+        localStorage.setItem(
+          "weekends",
+          JSON.stringify(weekends),
+        );
+      } else {
+        localStorage.removeItem("weekends");
+      }
+    },
+    //--------------------------------------------
     ADD_SELECTED_TASK(state, taskId) {
       if (!state.selectedTaskIds.includes(taskId)) {
         state.selectedTaskIds.push(taskId);
@@ -112,6 +129,15 @@ export default createStore({
     SET_ERROR(state, error) {
       state.error = error;
     },
+    //--------------------------------------------
+    SET_USER(state, user) {
+      state.user = user;
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      } else {
+        localStorage.removeItem("user");
+      }
+    },
     LOGOUT(state) {
       state.user = null;
       state.token = null;
@@ -125,6 +151,7 @@ export default createStore({
     },
   },
   actions: {
+    // --------------------- SESSION ACTIVITY ACTIONS -----------------------------
     async login({commit}, credentials) {
       try {
         const response = await api.login(credentials);
@@ -140,6 +167,25 @@ export default createStore({
         return Promise.reject(error);
       }
     },
+    async logout({commit}) {
+      commit("LOGOUT");
+      router.push("/");
+    },
+    async restoreSession({commit}) {
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+      const storedTasks = localStorage.getItem("tasks");
+      if (token && storedUser) {
+        commit("SET_TOKEN", token);
+        commit("SET_USER", JSON.parse(storedUser));
+        if (storedTasks) {
+          commit("SET_TASKS", JSON.parse(storedTasks));
+        }
+      } else {
+        commit("LOGOUT");
+      }
+    },
+    // --------------------- GET ACTIONS -----------------------------
     async getTasks({commit, state}) {
       try {
         if (!state.user?.id) {
@@ -180,19 +226,87 @@ export default createStore({
         commit("SET_CUSTOMERS", customers);
         return Promise.resolve(customers);
       } catch (error) {
-        console.error("Failed to fetch tasks:", error);
+        console.error("Failed to fetch clients:", error);
         commit("SET_CUSTOMERS", []);
         return Promise.reject(error);
       }
     },
-    toggleTaskSelection({commit}, taskId) {
-      commit("ADD_SELECTED_TASK", taskId);
+    async getWeekends({commit, state}) {
+      try {
+        if (!state.user?.id) {
+          console.error("User login not found");
+          return Promise.reject(
+            new Error("User not authenticated"),
+          );
+        }
+
+        const response = await api.getWeekends(state.user.id);
+
+        const weekends = response.data.weekends || [];
+
+        commit("SET_WEEKENDS", weekends);
+        return Promise.resolve(weekends);
+      } catch (error) {
+        console.error("Failed to fetch weekends:", error);
+        commit("SET_WEEKENDS", []);
+        return Promise.reject(error);
+      }
     },
-    removeTaskSelection({commit}, taskId) {
-      commit("REMOVE_SELECTED_TASK", taskId);
+    // --------------------- POST ACTIONS -----------------------------
+    async makeWeekend({commit, state, dispatch}, day) {
+      try {
+        const data = {master_id: state.user.id, date: day};
+        console.log(data);
+        await api.makeWeekend(data);
+
+        await dispatch("getWeekends");
+
+        router.push("/Diary");
+        return Promise.resolve();
+      } catch (error) {
+        console.error("Making weekend failed:", error);
+        return Promise.reject(error);
+      }
     },
-    clearSelectedTasks({commit}) {
-      commit("CLEAR_SELECTED_TASKS");
+    // --------------------- DELETE ACTIONS -----------------------------
+    async deleteWeekend({commit, state, dispatch}, id) {
+      try {
+        await api.deleteWeekend(id);
+
+        await dispatch("getWeekends");
+
+        router.push("/Diary");
+        return Promise.resolve();
+      } catch (error) {
+        console.error("Making weekend failed:", error);
+        return Promise.reject(error);
+      }
+    },
+    async deleteClients({commit, state, dispatch}, clientIds) {
+      if (!clientIds || clientIds.length === 0) {
+        throw new Error("Выберите клиентов для удаления");
+      }
+
+      commit("SET_LOADING", true);
+      commit("SET_ERROR", null);
+
+      try {
+        // Удаляем клиентов ПОСЛЕДОВАТЕЛЬНО, а не параллельно
+        for (const id of clientIds) {
+          await api.deleteCustomer(id);
+        }
+
+        // Перезагружаем список клиентов
+        await dispatch("getClients");
+
+        console.log(`Deleted ${clientIds.length} clients`);
+      } catch (error) {
+        console.error("Failed to delete clients:", error);
+        commit("SET_ERROR", error.message);
+        throw error;
+      } finally {
+        commit("SET_LOADING", false);
+      }
     },
     async deleteSelectedTasks({commit, state, dispatch}) {
       if (state.selectedTaskIds.length === 0) {
@@ -232,23 +346,15 @@ export default createStore({
         commit("SET_LOADING", false);
       }
     },
-    async logout({commit}) {
-      commit("LOGOUT");
-      router.push("/");
+    // --------------------- ESSENTIAL ACTIONS -----------------------------
+    toggleTaskSelection({commit}, taskId) {
+      commit("ADD_SELECTED_TASK", taskId);
     },
-    async restoreSession({commit}) {
-      const token = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
-      const storedTasks = localStorage.getItem("tasks");
-      if (token && storedUser) {
-        commit("SET_TOKEN", token);
-        commit("SET_USER", JSON.parse(storedUser));
-        if (storedTasks) {
-          commit("SET_TASKS", JSON.parse(storedTasks));
-        }
-      } else {
-        commit("LOGOUT");
-      }
+    removeTaskSelection({commit}, taskId) {
+      commit("REMOVE_SELECTED_TASK", taskId);
+    },
+    clearSelectedTasks({commit}) {
+      commit("CLEAR_SELECTED_TASKS");
     },
   },
 });

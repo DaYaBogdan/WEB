@@ -87,6 +87,8 @@ import NewTask from "../components/NewTask.vue";
 const store = useStore();
 
 const tasks = computed(() => store.getters.getTasks);
+const weekends = computed(() => store.getters.getWeekends);
+
 const isLoading = computed(() => store.getters.isLoading);
 const selectedCount = computed(
   () => store.getters.getSelectedTasksCount,
@@ -115,6 +117,15 @@ const loadClients = async () => {
     console.log("Clients loaded");
   } catch (error) {
     console.error("Failed to load clients:", error);
+  }
+};
+
+const loadWeekends = async () => {
+  try {
+    await store.dispatch("getWeekends");
+    console.log("Weekends loaded");
+  } catch (error) {
+    console.error("Failed to load weekends:", error);
   }
 };
 
@@ -179,11 +190,13 @@ const weekDays = computed(() => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Получаем актуальные задачи (убеждаемся, что это массив)
+  // Получаем актуальные задачи
   const tasksArray =
-    tasks.value && Array.isArray(tasks.value) ?
-      tasks.value
-    : [];
+    Array.isArray(tasks.value) ? tasks.value : [];
+
+  // ✅ Получаем weekends с проверкой на массив
+  const weekendsArray =
+    Array.isArray(weekends.value) ? weekends.value : [];
 
   for (let i = 0; i < 7; i++) {
     const currentDay = new Date(monday);
@@ -192,12 +205,19 @@ const weekDays = computed(() => {
 
     const isToday = currentDay.getTime() === today.getTime();
 
+    const existingWeekend = weekends.value.find(
+      (w) =>
+        new Date(w.date).toDateString() ===
+        currentDay.toDateString(),
+    );
+
     days.push({
       date: currentDay,
       weekday: getWeekdayName(currentDay.getDay()),
       formattedDate: formatDate(currentDay),
       tasks: getTasksForDay(tasksArray, currentDay),
       isToday: isToday,
+      weekend: existingWeekend,
     });
   }
 
@@ -245,5 +265,6 @@ const onTaskCreated = async () => {
 onMounted(() => {
   loadTasks();
   loadClients();
+  loadWeekends();
 });
 </script>

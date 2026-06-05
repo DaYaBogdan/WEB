@@ -1,5 +1,5 @@
 <script setup>
-import {ref, computed} from "vue";
+import {ref, computed, onMounted, watch} from "vue";
 import {useStore} from "vuex";
 
 const store = useStore();
@@ -7,6 +7,13 @@ const store = useStore();
 const props = defineProps({
   day: Object,
   selectedTaskIds: Array,
+});
+
+const isWeekend = computed(() => {
+  return (
+    props.day?.weekend !== undefined &&
+    props.day?.weekend !== null
+  );
 });
 
 const selectedTaskIds = computed(
@@ -37,15 +44,6 @@ const toggleTask = (taskId, event) => {
   }
 };
 
-// Получить количество выбранных задач в этом дне
-const selectedCountInDay = computed(() => {
-  if (!props.day?.tasks || !selectedTaskIds.value) return 0;
-  const dayTaskIds = props.day.tasks.map((t) => t.id);
-  return selectedTaskIds.value.filter((id) =>
-    dayTaskIds.includes(id),
-  ).length;
-});
-
 //---------------------CustomersWork-------------------------
 
 const findCustomer = (customer_id) => {
@@ -62,6 +60,61 @@ const findCustomer = (customer_id) => {
     return "Неизвестный клиент";
   }
 };
+
+const makeWeekend = async () => {
+  try {
+    const formattedDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(
+        2,
+        "0",
+      );
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+    await store.dispatch(
+      "makeWeekend",
+      formattedDate(props.day.date),
+    );
+  } catch (e) {
+    alert("Weekend ERROR");
+  }
+};
+
+const noWeekend = async () => {
+  try {
+    await store.dispatch(
+      "deleteWeekend",
+      props.day.weekend.id,
+    );
+  } catch (e) {
+    alert("Weekend ERROR");
+  }
+};
+
+const sortTasksByTime = () => {
+  if (props.day?.tasks && Array.isArray(props.day.tasks)) {
+    props.day.tasks.sort((a, b) => {
+      // Для формата "20:00:00" берем первые 5 символов "HH:MM"
+      const timeA = a.time?.substring(0, 5) || "00:00";
+      const timeB = b.time?.substring(0, 5) || "00:00";
+      return timeA.localeCompare(timeB);
+    });
+  }
+};
+
+// Сортировка при монтировании
+onMounted(() => {
+  sortTasksByTime();
+});
+
+watch(
+  () => props.day?.tasks,
+  () => {
+    sortTasksByTime();
+  },
+  {deep: true},
+);
 </script>
 
 <template>
@@ -69,8 +122,21 @@ const findCustomer = (customer_id) => {
     <p class="vertical-text">
       {{ day.formattedDate }} | {{ day?.weekday }}
     </p>
-    <div class="day bordered">
-      <div class="flex">
+    <div
+      class="day bordered"
+      :class="{
+        'day-weekend': isWeekend,
+      }"
+    >
+      <div class="column" v-if="isWeekend">
+        <p class="phoenix-accent-text base">ВЫХОДНОЙ</p>
+        <button class="bordered flex" @click="noWeekend">
+          <span class="material-icons little">smoke_free</span>
+          <p>Отменить выходной?</p>
+          <span class="material-icons little">no_drinks</span>
+        </button>
+      </div>
+      <div class="flex" v-else-if="day.tasks.length != 0">
         <div class="column" style="gap: 20px">
           <div
             v-if="day.tasks.length != 0"
@@ -103,12 +169,17 @@ const findCustomer = (customer_id) => {
               <hr />
             </div>
           </div>
-          <div v-if="day.tasks.length == 0">
-            <p class="horizontal-align" style="opacity: 0.4">
-              НА ЭТОТ ДЕНЬ КЛИЕНТОВ НЕТ
-            </p>
-          </div>
         </div>
+      </div>
+      <div class="column weekEndDialog" v-else>
+        <p class="phoenix-accent-text base">КЛИЕНТОВ НЕТ</p>
+        <button class="bordered flex" @click="makeWeekend">
+          <span class="material-icons little">event</span>
+          <p>Выходной?</p>
+          <span class="material-icons little"
+            >celebration</span
+          >
+        </button>
       </div>
     </div>
   </div>

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Optional
 
 class LoginData(BaseModel):
     login: str
@@ -12,8 +13,9 @@ class UserCreate(BaseModel):
 class UserResponse(BaseModel):
     id: int
     login: str
+    role: str
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True   # для работы с SQLAlchemy моделями
