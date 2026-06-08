@@ -15,6 +15,17 @@ export default createStore({
       }
       return null;
     })(),
+    settings: (() => {
+      const settingsStr = localStorage.getItem("settings");
+      if (settingsStr) {
+        try {
+          return JSON.parse(settingsStr);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    })(),
     token: localStorage.getItem("token") || null,
     tasks: (() => {
       const tasksStr = localStorage.getItem("tasks");
@@ -64,6 +75,7 @@ export default createStore({
     getSelectedTaskIds: (state) => state.selectedTaskIds,
     getSelectedTasksCount: (state) =>
       state.selectedTaskIds.length,
+    getSettings: (state) => state.settings,
   },
   mutations: {
     //--------------------------------------------
@@ -138,6 +150,17 @@ export default createStore({
         localStorage.removeItem("user");
       }
     },
+    SET_SETTINGS(state, settings) {
+      state.settings = settings;
+      if (settings) {
+        localStorage.setItem(
+          "settings",
+          JSON.stringify(settings),
+        );
+      } else {
+        localStorage.removeItem("settings");
+      }
+    },
     LOGOUT(state) {
       state.user = null;
       state.token = null;
@@ -156,8 +179,9 @@ export default createStore({
       try {
         const response = await api.login(credentials);
 
-        const {user, access_token} = response.data;
+        const {user, settings, access_token} = response.data;
         commit("SET_USER", user);
+        commit("SET_SETTINGS, settings");
         commit("SET_TOKEN", access_token);
 
         router.push("/Diary");

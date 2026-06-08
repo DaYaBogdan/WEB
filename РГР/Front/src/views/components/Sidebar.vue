@@ -60,12 +60,16 @@ const logout = async () => {
           </span>
           <span class="text">Мастера</span>
         </RouterLink>
-        <!-- <RouterLink class="button" :to="{name: 'AllTasks'}"
+        <RouterLink class="button" :to="{name: 'AllTasks'}"
           ><span class="material-icons"> event_note </span>
           <span class="text">Все записи</span>
-        </RouterLink> -->
+        </RouterLink>
       </div>
-
+      <hr />
+      <RouterLink class="button" :to="{name: 'Settings'}"
+        ><span class="material-icons"> settings </span>
+        <span class="text">Настройки</span>
+      </RouterLink>
       <button class="button" @click="logout" style="">
         <span class="material-icons">logout</span>
         <span class="text">Выход</span>

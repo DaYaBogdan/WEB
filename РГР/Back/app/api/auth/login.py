@@ -20,6 +20,8 @@ async def login(
     result = await db.execute(select(User).where(User.login == login_data.login))
     user = result.scalar_one_or_none()
 
+    post_result = await db.execute(select(Settings))
+
     # Проверка пароля
     if not user or not verify_password(login_data.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")

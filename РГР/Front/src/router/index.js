@@ -5,6 +5,7 @@ import Diary from "@/views/templates/Diary.vue";
 import Clients from "@/views/templates/Clients.vue";
 import Masters from "@/views/templates/admin/Masters.vue";
 import AllTasks from "@/views/templates/admin/AllTasks.vue";
+import Settings from "@/views/templates/Settings.vue";
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: "/Clients",
     name: "Clients",
     component: Clients,
+  },
+  {
+    path: "/Settings",
+    name: "Settings",
+    component: Settings,
   },
 ];
 
