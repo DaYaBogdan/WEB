@@ -139,11 +139,14 @@ onMounted(() => {
         <!-- Шапка таблицы -->
         <div
           class="master-item header grid"
-          style="grid-template-columns: auto 1fr 1fr"
+          style="grid-template-columns: repeat(3, 1fr) 1fr 1fr"
           v-if="masters.length"
         >
           <p></p>
-          <p class="header-text" style="margin-left: 20px">
+          <p class="header-text">
+            <strong>ФИО</strong>
+          </p>
+          <p class="header-text">
             <strong>Логин</strong>
           </p>
           <p class="header-text">
@@ -154,7 +157,7 @@ onMounted(() => {
         <!-- Строки с данными мастеров -->
         <div
           class="master-item grid"
-          style="grid-template-columns: auto 1fr 1fr"
+          style="grid-template-columns: repeat(3, 1fr) 1fr 1fr"
           v-for="master in masters"
           :key="master.id"
         >
@@ -164,6 +167,7 @@ onMounted(() => {
             :checked="selectedMasters.includes(master.id)"
             @change="toggleMasterSelection(master.id)"
           />
+          <p>{{ master.fio }}</p>
           <p>{{ master.login }}</p>
           <p>{{ master.role }}</p>
         </div>

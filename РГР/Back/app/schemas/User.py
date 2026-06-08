@@ -7,11 +7,13 @@ class LoginData(BaseModel):
     password: str
 
 class UserCreate(BaseModel):
+    fio: str = Field(..., min_length=3, max_length=50)
     login: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6)
 
 class UserResponse(BaseModel):
     id: int
+    fio: str 
     login: str
     role: str
     created_at: datetime

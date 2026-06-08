@@ -10,6 +10,21 @@
 
       <form @submit.prevent="submitForm">
         <div class="form-group">
+          <label for="service">Фамилия Имя Отчество</label>
+          <input
+            id="Phone"
+            type="text"
+            v-model="form.fio"
+            placeholder="Например: Иваненко Иван Иванович"
+            required
+            :class="{error: errors.fio}"
+          />
+          <span v-if="errors.fio" class="error-text">{{
+            errors.fio
+          }}</span>
+        </div>
+
+        <div class="form-group">
           <label for="service">Логин</label>
           <input
             id="FIO"
@@ -28,7 +43,7 @@
           <label for="service">Пароль</label>
           <input
             id="Phone"
-            type="text"
+            type="password"
             v-model="form.password"
             placeholder="Например: 12345qwerty"
             required
@@ -69,8 +84,9 @@ const emit = defineEmits(["close", "success"]);
 
 // Форма
 const form = ref({
-  master_login: "",
-  master_password: "",
+  fio: "",
+  login: "",
+  password: "",
 });
 
 // Ошибки валидации
@@ -81,12 +97,31 @@ const isLoading = ref(false);
 const validateForm = () => {
   const newErrors = {};
 
+  if (!form.value.fio) {
+    newErrors.fio = "Введите ФИО мастера";
+  } else if (form.value.fio.length <= 3) {
+    newErrors.fio =
+      "ФИО мастера не должно быть меньше 3 символов";
+  } else if (form.value.fio.length >= 50) {
+    newErrors.fio =
+      "ФИО мастера не должно быть больше 50 символов";
+  }
+
   if (!form.value.login) {
-    newErrors.login = "Введите ФИО клиента";
+    newErrors.login = "Введите Логин мастера";
+  } else if (form.value.login.length <= 3) {
+    newErrors.fio =
+      "Логин мастера не должен быть меньше 3 символов";
+  } else if (form.value.login.length >= 50) {
+    newErrors.fio =
+      "Логин мастера не должен быть больше 50 символов";
   }
 
   if (!form.value.password) {
-    newErrors.password = "Введите ФИО клиента";
+    newErrors.password = "Введите пароль мастера";
+  } else if (form.value.password.length <= 6) {
+    newErrors.password =
+      "Длина пароля должна быть не меньше 6 ";
   }
 
   errors.value = newErrors;
@@ -102,6 +137,7 @@ const submitForm = async () => {
   try {
     // Создаем объект задачи
     const masterData = {
+      fio: form.value.fio.trim(),
       login: form.value.login.trim(),
       password: form.value.password.trim(),
     };

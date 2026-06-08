@@ -26,6 +26,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     
     # Создаём нового пользователя
     new_user = User(
+        fio=user_data.fio,
         login=user_data.login,
         password=hashed_password,
         role='master'

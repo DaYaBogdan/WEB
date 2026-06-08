@@ -137,11 +137,11 @@ onMounted(() => {
         <!-- Шапка таблицы - отображается один раз, если есть клиенты -->
         <div
           class="client-item header grid"
-          style="grid-template-columns: auto 1fr 1fr"
+          style="grid-template-columns: repeat(2, 1fr) 1fr 1fr"
           v-if="clients.length"
         >
           <p></p>
-          <p class="header-text" style="margin-left: 20px">
+          <p class="header-text">
             <strong>ФИО</strong>
           </p>
           <p class="header-text">
@@ -152,7 +152,7 @@ onMounted(() => {
         <!-- Строки с данными клиентов -->
         <div
           class="client-item grid"
-          style="grid-template-columns: auto 1fr 1fr"
+          style="grid-template-columns: repeat(2, 1fr) 1fr 1fr"
           v-for="client in clients"
           :key="client.id"
         >
