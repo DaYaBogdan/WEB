@@ -4,18 +4,6 @@
     <div class="column">
       <!-- Навигационная панель -->
       <div class="flex">
-        <!-- Поиск -->
-        <!-- <div class="flex">
-          <button>
-            <span class="material-icons little">search</span>
-          </button>
-          <input
-            class="bordered"
-            type="text"
-            placeholder="Поиск"
-          />
-        </div> -->
-
         <!-- Кнопка добавления записи -->
         <div class="flex">
           <button class="bordered flex" @click="openAddModal">
@@ -23,7 +11,7 @@
               class="phoenix-accent-text"
               style="margin-top: 4px; padding: 0"
             >
-              Добавить
+              {{ t("diary.addTask") }}
             </p>
             <span class="material-icons little">add</span>
           </button>
@@ -40,7 +28,7 @@
               class="phoenix-accent-text"
               style="margin-top: 4px; padding: 0"
             >
-              Удалить
+              {{ t("diary.deleteTask") }}
             </p>
             <span class="material-icons little">close</span>
           </button>
@@ -65,13 +53,21 @@
           :day="day"
         />
       </div>
-      <div v-else class="loading">Загрузка...</div>
+      <div v-else class="loading">
+        {{ t("common.loading") }}
+      </div>
 
       <!-- Навигация между неделями -->
       <div class="flex horizontal-align">
-        <button @click="prevWeek">← Предыдущая</button>
-        <button @click="resetToToday">Вернуться</button>
-        <button @click="nextWeek">Следующая →</button>
+        <button @click="prevWeek">
+          {{ t("diary.prevWeek") }}
+        </button>
+        <button @click="resetToToday">
+          {{ t("diary.resetWeek") }}
+        </button>
+        <button @click="nextWeek">
+          {{ t("diary.nextWeek") }}
+        </button>
       </div>
     </div>
   </main>
@@ -82,8 +78,10 @@ import Day from "../components/Day.vue";
 import {ref, computed, onMounted} from "vue";
 import Sidebar from "../components/Sidebar.vue";
 import {useStore} from "vuex";
+import {useI18n} from "vue-i18n";
 import NewTask from "../components/NewTask.vue";
 
+const {t} = useI18n();
 const store = useStore();
 
 const tasks = computed(() => store.getters.getTasks);
@@ -130,16 +128,16 @@ const loadWeekends = async () => {
 };
 
 //---------------------WeekdaysLogic-------------------------------
-// Функция возврата названия дня недели по индексу
+// Функция возврата названия дня недели по индексу (локализованная)
 const getWeekdayName = (dayIndex) => {
   const weekdays = [
-    "Воскресенье",
-    "Понедельник",
-    "Вторник",
-    "Среда",
-    "Четверг",
-    "Пятница",
-    "Суббота",
+    t("diary.weekdays.sunday"),
+    t("diary.weekdays.monday"),
+    t("diary.weekdays.tuesday"),
+    t("diary.weekdays.wednesday"),
+    t("diary.weekdays.thursday"),
+    t("diary.weekdays.friday"),
+    t("diary.weekdays.saturday"),
   ];
   return weekdays[dayIndex];
 };
@@ -148,29 +146,23 @@ const getWeekdayName = (dayIndex) => {
 const formatDate = (date) => {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
-  // const year = String(date.getFullYear());
   return `${day}.${month}`;
 };
 
 function getTasksForDay(tasksArray, currentDay) {
-  // Проверяем, что tasksArray существует и является массивом
   if (!tasksArray || !Array.isArray(tasksArray)) {
     return [];
   }
 
-  // Создаем копию currentDay с обнуленным временем
   const targetDate = new Date(currentDay);
   targetDate.setHours(0, 0, 0, 0);
 
-  // Фильтруем задачи
   return tasksArray.filter((task) => {
     if (!task.dateTime) return false;
 
-    // Создаем дату задачи и обнуляем время
     const taskDate = new Date(task.dateTime);
     taskDate.setHours(0, 0, 0, 0);
 
-    // Сравниваем даты
     return taskDate.getTime() === targetDate.getTime();
   });
 }
@@ -180,23 +172,16 @@ const weekDays = computed(() => {
   const days = [];
   const current = new Date(referenceDate.value);
 
-  // Вычисляем понедельник текущей недели
   const monday = new Date(current);
   const dayOfWeek = current.getDay();
   const diffToMonday = (dayOfWeek + 6) % 7;
   monday.setDate(current.getDate() - diffToMonday);
 
-  // Сегодняшняя дата без времени
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Получаем актуальные задачи
   const tasksArray =
     Array.isArray(tasks.value) ? tasks.value : [];
-
-  // ✅ Получаем weekends с проверкой на массив
-  const weekendsArray =
-    Array.isArray(weekends.value) ? weekends.value : [];
 
   for (let i = 0; i < 7; i++) {
     const currentDay = new Date(monday);
@@ -231,14 +216,12 @@ const prevWeek = () => {
   referenceDate.value = newDate;
 };
 
-// Переключение на следующую неделю
 const nextWeek = () => {
   const newDate = new Date(referenceDate.value);
   newDate.setDate(newDate.getDate() + 7);
   referenceDate.value = newDate;
 };
 
-// Сброс к текущей неделе
 const resetToToday = () => {
   referenceDate.value = new Date();
 };
@@ -248,7 +231,6 @@ const deleteSelectedTasks = async () => {
   try {
     await store.dispatch("deleteSelectedTasks");
   } catch (error) {
-    // Ошибка уже обработана в store
     console.error("Delete failed:", error);
   }
 };
@@ -258,7 +240,7 @@ const openAddModal = () => {
 };
 
 const onTaskCreated = async () => {
-  await loadTasks(); // Обновляем список задач
+  await loadTasks();
   showAddModal.value = false;
 };
 
@@ -268,3 +250,17 @@ onMounted(() => {
   loadWeekends();
 });
 </script>
+
+<style lang="scss" scoped>
+.page-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: calc(2rem + 32px);
+  padding: 2rem;
+  transition: margin-left 0.2s ease-out;
+}
+</style>

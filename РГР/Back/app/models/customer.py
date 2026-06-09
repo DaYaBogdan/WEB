@@ -7,3 +7,4 @@ class Customer(BaseModel):
     
     FIO = Column(String)
     phone = Column(String)
+    email = Column(String, nullable=True)  # Явно указываем nullable=True

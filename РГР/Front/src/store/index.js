@@ -161,6 +161,9 @@ export default createStore({
         localStorage.removeItem("settings");
       }
     },
+    UPDATE_SETTINGS(state, newSettings) {
+      state.settings = {...state.settings, ...newSettings};
+    },
     LOGOUT(state) {
       state.user = null;
       state.token = null;
@@ -181,7 +184,7 @@ export default createStore({
 
         const {user, settings, access_token} = response.data;
         commit("SET_USER", user);
-        commit("SET_SETTINGS, settings");
+        commit("SET_SETTINGS", settings);
         commit("SET_TOKEN", access_token);
 
         router.push("/Diary");
@@ -232,6 +235,16 @@ export default createStore({
         console.error("Failed to fetch tasks:", error);
         commit("SET_TASKS", []);
         return Promise.reject(error);
+      }
+    },
+    async getSettings({commit, state}) {
+      try {
+        const response = await api.getSettings(state.user.id);
+        commit("SET_SETTINGS", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Failed to load settings:", error);
+        throw error;
       }
     },
     async getClients({commit, state}) {
@@ -368,6 +381,41 @@ export default createStore({
         throw error;
       } finally {
         commit("SET_LOADING", false);
+      }
+    },
+    // --------------------- UPDATE ACTIONS -----------------------------
+    async updateSettings({commit, state}, {settingsData}) {
+      try {
+        const response = await api.updateSettings(
+          state.user.id,
+          settingsData,
+        );
+
+        // Обновляем store
+        commit("UPDATE_SETTINGS", response.data);
+
+        // Сохраняем в localStorage
+        if (settingsData.theme) {
+          localStorage.setItem(
+            "userTheme",
+            settingsData.theme,
+          );
+          document.documentElement.setAttribute(
+            "data-theme",
+            settingsData.theme,
+          );
+        }
+        if (settingsData.language) {
+          localStorage.setItem(
+            "userLanguage",
+            settingsData.language,
+          );
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error("Failed to update settings:", error);
+        throw error;
       }
     },
     // --------------------- ESSENTIAL ACTIONS -----------------------------

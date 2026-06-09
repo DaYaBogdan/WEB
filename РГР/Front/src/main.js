@@ -3,6 +3,7 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 import networkStatus from "../plugins/networkStatus.js";
+import i18n from "./i18n";
 
 import "vuetify/styles";
 import {createVuetify} from "vuetify";
@@ -77,4 +78,5 @@ app
   .use(store)
   .use(vuetify)
   .use(networkStatus)
+  .use(i18n)
   .mount("#app");

@@ -10,6 +10,18 @@ from app.schemas.Task import TaskCreate, TaskResponse, TaskUpdate
 
 router = APIRouter()
 
+@router.get("/getAllTasks")
+async def getAllTasks(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+                      ):
+    query = select(Task).offset(skip).limit(limit).order_by(Task.dateTime)
+    result = await db.execute(query)
+    tasks = result.scalars().all()  # используйте scalars() вместо all()
+    
+    return [TaskResponse.model_validate(task) for task in tasks]
+
 @router.post("/pushTask", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 async def pushTask(
     task_data: TaskCreate,

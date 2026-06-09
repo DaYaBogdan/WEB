@@ -56,6 +56,12 @@ export default {
       params: {skip: 0, limit: 100},
     });
   },
+  updateCustomer(customer_id, customer_data) {
+    return apiClient.put(
+      `managing/updateClient/${customer_id}`,
+      customer_data,
+    );
+  },
   // В api/index.js
   deleteCustomer(id) {
     return apiClient.delete(`managing/deleteClient/${id}`);
@@ -74,9 +80,30 @@ export default {
   getMasters() {
     return apiClient.get("masters/getAllMasters/");
   },
+  getMaster(masterId) {
+    return apiClient.get(`/masters/getMaster/${masterId}`);
+  },
+  updateMaster(masterId, masterData) {
+    return apiClient.put(
+      `/masters/updateMaster/${masterId}`,
+      masterData,
+    );
+  },
   deleteMaster(master_id) {
     return apiClient.delete(
       `masters/deleteMaster/${master_id}`,
     );
+  },
+  getSettings(user_id) {
+    return apiClient.get(`settings/get/${user_id}`);
+  },
+  updateSettings(user_id, settingsData) {
+    return apiClient.put(
+      `settings/update/${user_id}`, // Теперь user_id передается правильно
+      settingsData,
+    );
+  },
+  getAllTasks() {
+    return apiClient.get("/diary/getAllTasks");
   },
 };

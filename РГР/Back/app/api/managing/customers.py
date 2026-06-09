@@ -27,7 +27,8 @@ async def create_customer(
     # Создаём нового клиента (поля created_at и updated_at добавятся автоматически)
     new_customer = Customer(
         FIO=customer_data.FIO,
-        phone=customer_data.phone
+        phone=customer_data.phone,
+        email=customer_data.email
     )
     
     db.add(new_customer)
@@ -48,25 +49,6 @@ async def get_all_customers(
     )
     customers = result.scalars().all()
     return customers
-
-# GET - получить одного клиента по ID
-# @router.get("/GetExactClient/{customer_id}", response_model=CustomerResponse)
-# async def get_customer_by_id(
-#     customer_id: int,
-#     db: AsyncSession = Depends(get_db)
-# ):
-#     result = await db.execute(
-#         select(Customer).where(Customer.id == customer_id)
-#     )
-#     customer = result.scalar_one_or_none()
-    
-#     if not customer:
-#         raise HTTPException(
-#             status_code=status.HTTP_404_NOT_FOUND,
-#             detail="Customer not found"
-#         )
-    
-#     return customer
 
 # PUT - полное обновление клиента
 @router.put("/updateClient/{customer_id}", response_model=CustomerResponse)
@@ -103,7 +85,8 @@ async def update_customer(
                 detail="Phone number already used by another customer"
             )
         customer.phone = customer_data.phone
-    
+    if customer_data.email is not None:
+        customer.email = customer_data.email
     # updated_at обновится автоматически благодаря onupdate=func.now()
     await db.commit()
     await db.refresh(customer)

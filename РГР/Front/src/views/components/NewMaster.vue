@@ -2,7 +2,10 @@
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="phoenix-accent-text">Добавление мастера</h2>
+        <h2 class="phoenix-accent-text">
+          {{ isEdit ? "Редактирование" : "Добавление" }}
+          мастера
+        </h2>
         <button class="close-btn" @click="closeModal">
           <span class="material-icons">close</span>
         </button>
@@ -10,13 +13,12 @@
 
       <form @submit.prevent="submitForm">
         <div class="form-group">
-          <label for="service">Фамилия Имя Отчество</label>
+          <label for="FIO">Фамилия Имя Отчество *</label>
           <input
-            id="Phone"
+            id="FIO"
             type="text"
             v-model="form.fio"
             placeholder="Например: Иваненко Иван Иванович"
-            required
             :class="{error: errors.fio}"
           />
           <span v-if="errors.fio" class="error-text">{{
@@ -25,32 +27,59 @@
         </div>
 
         <div class="form-group">
-          <label for="service">Логин</label>
+          <label for="Login">Логин *</label>
           <input
-            id="FIO"
+            id="Login"
             type="text"
             v-model="form.login"
-            placeholder="Например: Bogdan"
-            required
+            placeholder="Например: master_ivan"
             :class="{error: errors.login}"
+            :disabled="isEdit"
           />
           <span v-if="errors.login" class="error-text">{{
-            errors.fio
+            errors.login
           }}</span>
+          <small v-if="isEdit" class="hint-text"
+            >Логин нельзя изменить</small
+          >
         </div>
 
         <div class="form-group">
-          <label for="service">Пароль</label>
+          <label for="Password">
+            Пароль
+            <span v-if="!isEdit" class="required">*</span>
+            <span v-else class="optional"
+              >(оставьте пустым, чтобы не менять)</span
+            >
+          </label>
           <input
-            id="Phone"
+            id="Password"
             type="password"
             v-model="form.password"
-            placeholder="Например: 12345qwerty"
-            required
+            :placeholder="
+              isEdit ?
+                'Введите новый пароль (необязательно)'
+              : 'Например: 12345qwerty'
+            "
             :class="{error: errors.password}"
           />
           <span v-if="errors.password" class="error-text">{{
             errors.password
+          }}</span>
+        </div>
+
+        <div class="form-group" v-if="isEdit">
+          <label for="Role">Роль</label>
+          <select
+            id="Role"
+            v-model="form.role"
+            :class="{error: errors.role}"
+          >
+            <option value="master">Мастер</option>
+            <option value="admin">Администратор</option>
+          </select>
+          <span v-if="errors.role" class="error-text">{{
+            errors.role
           }}</span>
         </div>
 
@@ -68,7 +97,9 @@
             :disabled="isLoading"
           >
             <span v-if="isLoading" class="spinner"></span>
-            <span v-else>Добавить мастера</span>
+            <span v-else>{{
+              isEdit ? "Сохранить" : "Добавить мастера"
+            }}</span>
           </button>
         </div>
       </form>
@@ -77,19 +108,26 @@
 </template>
 
 <script setup>
-import {ref} from "vue";
+import {ref, onMounted} from "vue";
 import api from "@/api";
+
+const props = defineProps({
+  master: {
+    type: Object,
+    default: null,
+  },
+});
 
 const emit = defineEmits(["close", "success"]);
 
-// Форма
+const isEdit = ref(false);
 const form = ref({
   fio: "",
   login: "",
   password: "",
+  role: "master",
 });
 
-// Ошибки валидации
 const errors = ref({});
 const isLoading = ref(false);
 
@@ -97,31 +135,45 @@ const isLoading = ref(false);
 const validateForm = () => {
   const newErrors = {};
 
-  if (!form.value.fio) {
+  // Валидация ФИО
+  if (!form.value.fio || !form.value.fio.trim()) {
     newErrors.fio = "Введите ФИО мастера";
-  } else if (form.value.fio.length <= 3) {
-    newErrors.fio =
-      "ФИО мастера не должно быть меньше 3 символов";
-  } else if (form.value.fio.length >= 50) {
-    newErrors.fio =
-      "ФИО мастера не должно быть больше 50 символов";
+  } else if (form.value.fio.length < 3) {
+    newErrors.fio = "ФИО должно содержать минимум 3 символа";
+  } else if (form.value.fio.length > 100) {
+    newErrors.fio = "ФИО не должно превышать 100 символов";
   }
 
-  if (!form.value.login) {
-    newErrors.login = "Введите Логин мастера";
-  } else if (form.value.login.length <= 3) {
-    newErrors.fio =
-      "Логин мастера не должен быть меньше 3 символов";
-  } else if (form.value.login.length >= 50) {
-    newErrors.fio =
-      "Логин мастера не должен быть больше 50 символов";
+  // Валидация логина (только для нового мастера)
+  if (!isEdit.value) {
+    if (!form.value.login || !form.value.login.trim()) {
+      newErrors.login = "Введите логин мастера";
+    } else if (form.value.login.length < 3) {
+      newErrors.login =
+        "Логин должен содержать минимум 3 символа";
+    } else if (form.value.login.length > 50) {
+      newErrors.login =
+        "Логин не должен превышать 50 символов";
+    } else if (!/^[a-zA-Z0-9_]+$/.test(form.value.login)) {
+      newErrors.login =
+        "Логин может содержать только буквы, цифры и знак подчеркивания";
+    }
   }
 
-  if (!form.value.password) {
-    newErrors.password = "Введите пароль мастера";
-  } else if (form.value.password.length <= 6) {
+  // Валидация пароля
+  if (!isEdit.value) {
+    if (!form.value.password) {
+      newErrors.password = "Введите пароль";
+    } else if (form.value.password.length < 6) {
+      newErrors.password =
+        "Пароль должен содержать минимум 6 символов";
+    }
+  } else if (
+    form.value.password &&
+    form.value.password.length < 6
+  ) {
     newErrors.password =
-      "Длина пароля должна быть не меньше 6 ";
+      "Пароль должен содержать минимум 6 символов";
   }
 
   errors.value = newErrors;
@@ -135,26 +187,45 @@ const submitForm = async () => {
   isLoading.value = true;
 
   try {
-    // Создаем объект задачи
-    const masterData = {
-      fio: form.value.fio.trim(),
-      login: form.value.login.trim(),
-      password: form.value.password.trim(),
-    };
+    let response;
 
-    // Отправляем запрос на сервер
-    const response = await api.register(masterData);
+    if (isEdit.value && props.master) {
+      // Редактирование мастера
+      const masterData = {
+        fio: form.value.fio.trim(),
+        role: form.value.role,
+      };
 
-    // Успех - закрываем модалку и обновляем список
+      // Добавляем пароль только если он указан
+      if (form.value.password && form.value.password.trim()) {
+        masterData.password = form.value.password.trim();
+      }
+
+      response = await api.updateMaster(
+        props.master.id,
+        masterData,
+      );
+    } else {
+      // Создание нового мастера
+      const masterData = {
+        fio: form.value.fio.trim(),
+        login: form.value.login.trim(),
+        password: form.value.password.trim(),
+        role: "master",
+      };
+
+      response = await api.register(masterData);
+    }
+
     emit("success", response.data);
     closeModal();
   } catch (error) {
-    console.error("Failed to add Master:", error);
+    console.error("Failed to save master:", error);
     if (error.response?.data?.detail) {
       alert("Ошибка: " + error.response.data.detail);
     } else {
       alert(
-        "Не удалось Добавить мастера. Проверьте подключение к интернету.",
+        `Не удалось ${isEdit.value ? "сохранить" : "добавить"} мастера. Проверьте подключение к интернету.`,
       );
     }
   } finally {
@@ -166,6 +237,19 @@ const submitForm = async () => {
 const closeModal = () => {
   emit("close");
 };
+
+// Инициализация формы для редактирования
+onMounted(() => {
+  if (props.master) {
+    isEdit.value = true;
+    form.value = {
+      fio: props.master.fio || "",
+      login: props.master.login || "",
+      password: "", // Пароль не заполняем при редактировании
+      role: props.master.role || "master",
+    };
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -185,7 +269,7 @@ const closeModal = () => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--light);
   border-radius: 20px;
   width: 90%;
   max-width: 500px;
@@ -225,7 +309,7 @@ const closeModal = () => {
 
     .material-icons {
       font-size: 24px;
-      color: #666;
+      color: var(--grey);
     }
   }
 }
@@ -249,10 +333,12 @@ form {
   select {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s;
+    background: var(--light);
+    color: var(--text-color);
 
     &:focus {
       outline: none;
@@ -263,6 +349,11 @@ form {
     &.error {
       border-color: var(--error);
     }
+
+    &:disabled {
+      background: var(--dark-alt);
+      cursor: not-allowed;
+    }
   }
 
   .error-text {
@@ -271,12 +362,23 @@ form {
     font-size: 12px;
     color: var(--error);
   }
-}
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  .hint-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: var(--grey);
+  }
+
+  .required {
+    color: var(--error);
+  }
+
+  .optional {
+    font-size: 12px;
+    color: var(--grey);
+    font-weight: normal;
+  }
 }
 
 .form-actions {
@@ -296,11 +398,11 @@ form {
   }
 
   .cancel-btn {
-    background: #f5f5f5;
-    color: #666;
+    background: var(--dark-alt);
+    color: var(--grey);
 
     &:hover {
-      background: #e0e0e0;
+      background: var(--border-color);
     }
   }
 

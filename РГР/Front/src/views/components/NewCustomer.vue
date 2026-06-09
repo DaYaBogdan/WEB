@@ -2,7 +2,10 @@
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="phoenix-accent-text">Добавление клиента</h2>
+        <h2 class="phoenix-accent-text">
+          {{ isEdit ? "Редактирование" : "Добавление" }}
+          клиента
+        </h2>
         <button class="close-btn" @click="closeModal">
           <span class="material-icons">close</span>
         </button>
@@ -10,13 +13,12 @@
 
       <form @submit.prevent="submitForm">
         <div class="form-group">
-          <label for="service">Фамилия Имя Отчество</label>
+          <label for="FIO">Фамилия Имя Отчество *</label>
           <input
             id="FIO"
             type="text"
             v-model="form.fio"
             placeholder="Например: Иваненко Иван Иванович"
-            required
             :class="{error: errors.fio}"
           />
           <span v-if="errors.fio" class="error-text">{{
@@ -25,17 +27,30 @@
         </div>
 
         <div class="form-group">
-          <label for="service">Телефон</label>
+          <label for="Phone">Телефон *</label>
           <input
             id="Phone"
-            type="text"
+            type="tel"
             v-model="form.phone"
-            placeholder="Например: +79792341234"
-            required
+            placeholder="+7 999 123-45-67"
             :class="{error: errors.phone}"
           />
           <span v-if="errors.phone" class="error-text">{{
             errors.phone
+          }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="Email">Email</label>
+          <input
+            id="Email"
+            type="email"
+            v-model="form.email"
+            placeholder="client@example.com"
+            :class="{error: errors.email}"
+          />
+          <span v-if="errors.email" class="error-text">{{
+            errors.email
           }}</span>
         </div>
 
@@ -53,7 +68,9 @@
             :disabled="isLoading"
           >
             <span v-if="isLoading" class="spinner"></span>
-            <span v-else>Добавить Клиента</span>
+            <span v-else>{{
+              isEdit ? "Сохранить" : t("addNew")
+            }}</span>
           </button>
         </div>
       </form>
@@ -62,18 +79,28 @@
 </template>
 
 <script setup>
-import {ref} from "vue";
+import {ref, onMounted} from "vue";
 import api from "@/api";
+import {useI18n} from "vue-i18n";
+
+const {t} = useI18n();
+
+const props = defineProps({
+  customer: {
+    type: Object,
+    default: null,
+  },
+});
 
 const emit = defineEmits(["close", "success"]);
 
-// Форма
+const isEdit = ref(false);
 const form = ref({
-  customer_fio: "",
-  customer_phone: "",
+  fio: "",
+  phone: "",
+  email: "",
 });
 
-// Ошибки валидации
 const errors = ref({});
 const isLoading = ref(false);
 
@@ -81,20 +108,61 @@ const isLoading = ref(false);
 const validateForm = () => {
   const newErrors = {};
 
-  if (!form.value.fio) {
+  if (!form.value.fio || !form.value.fio.trim()) {
     newErrors.fio = "Введите ФИО клиента";
+  } else if (form.value.fio.length < 3) {
+    newErrors.fio = "ФИО должно содержать минимум 3 символа";
   }
 
-  if (
-    !form.value.phone ||
-    !/^\+7\d{10}$/.test(form.value.phone.trim())
-  ) {
-    newErrors.service =
-      "Введите номер телефона (формат +7XXXXXXXXXX, всего 12 символов)";
+  if (!form.value.phone || !form.value.phone.trim()) {
+    newErrors.phone = "Введите номер телефона";
+  } else {
+    // Очищаем номер от лишних символов
+    let cleanPhone = form.value.phone.replace(/[^\d+]/g, "");
+
+    // Проверяем формат
+    const phoneRegex = /^\+7\d{10}$/;
+    const phoneRegexAlt = /^8\d{10}$/;
+
+    if (
+      !phoneRegex.test(cleanPhone) &&
+      !phoneRegexAlt.test(cleanPhone)
+    ) {
+      newErrors.phone =
+        "Введите номер в формате +7XXXXXXXXXX (11 цифр после +7)";
+    }
+  }
+
+  if (form.value.email && form.value.email.trim()) {
+    const emailRegex = /^[^\s@]+@([^\s@.,]+\.)+[^\s@.,]{2,}$/;
+    if (!emailRegex.test(form.value.email)) {
+      newErrors.email = "Введите корректный email адрес";
+    }
   }
 
   errors.value = newErrors;
   return Object.keys(newErrors).length === 0;
+};
+
+// Очистка и форматирование телефона
+const formatPhone = (phone) => {
+  let cleaned = phone.replace(/\D/g, "");
+
+  if (cleaned.startsWith("8")) {
+    cleaned = "+7" + cleaned.substring(1);
+  } else if (
+    !cleaned.startsWith("7") &&
+    !cleaned.startsWith("+")
+  ) {
+    cleaned = "+7" + cleaned;
+  } else if (
+    cleaned.startsWith("7") &&
+    !cleaned.startsWith("+7")
+  ) {
+    cleaned = "+7" + cleaned.substring(1);
+  }
+
+  return cleaned;
 };
 
 // Отправка формы
@@ -104,25 +172,31 @@ const submitForm = async () => {
   isLoading.value = true;
 
   try {
-    // Создаем объект задачи
     const customerData = {
       FIO: form.value.fio.trim(),
-      phone: form.value.phone.trim(),
+      phone: formatPhone(form.value.phone),
+      email: form.value.email?.trim() || null,
     };
 
-    // Отправляем запрос на сервер
-    const response = await api.addCustomer(customerData);
+    let response;
+    if (isEdit.value && props.customer) {
+      response = await api.updateCustomer(
+        props.customer.id,
+        customerData,
+      );
+    } else {
+      response = await api.addCustomer(customerData);
+    }
 
-    // Успех - закрываем модалку и обновляем список
     emit("success", response.data);
     closeModal();
   } catch (error) {
-    console.error("Failed to addCustomer:", error);
+    console.error("Failed to save customer:", error);
     if (error.response?.data?.detail) {
       alert("Ошибка: " + error.response.data.detail);
     } else {
       alert(
-        "Не удалось Добавить клиента. Проверьте подключение к интернету.",
+        `Не удалось ${isEdit.value ? "сохранить" : "добавить"} клиента. Проверьте подключение к интернету.`,
       );
     }
   } finally {
@@ -134,6 +208,18 @@ const submitForm = async () => {
 const closeModal = () => {
   emit("close");
 };
+
+// Инициализация формы для редактирования
+onMounted(() => {
+  if (props.customer) {
+    isEdit.value = true;
+    form.value = {
+      fio: props.customer.FIO || "",
+      phone: props.customer.phone || "",
+      email: props.customer.email || "",
+    };
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -153,7 +239,7 @@ const closeModal = () => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--light);
   border-radius: 20px;
   width: 90%;
   max-width: 500px;
@@ -193,7 +279,7 @@ const closeModal = () => {
 
     .material-icons {
       font-size: 24px;
-      color: #666;
+      color: var(--grey);
     }
   }
 }
@@ -213,14 +299,15 @@ form {
     font-size: 14px;
   }
 
-  input,
-  select {
+  input {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s;
+    background: var(--light);
+    color: var(--text-color);
 
     &:focus {
       outline: none;
@@ -241,12 +328,6 @@ form {
   }
 }
 
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-}
-
 .form-actions {
   display: flex;
   gap: 15px;
@@ -264,11 +345,11 @@ form {
   }
 
   .cancel-btn {
-    background: #f5f5f5;
-    color: #666;
+    background: var(--dark-alt);
+    color: var(--grey);
 
     &:hover {
-      background: #e0e0e0;
+      background: var(--border-color);
     }
   }
 

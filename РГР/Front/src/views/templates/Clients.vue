@@ -3,8 +3,12 @@ import Sidebar from "../components/Sidebar.vue";
 import {onMounted, ref, computed} from "vue";
 import {useStore} from "vuex";
 import NewCustomer from "../components/NewCustomer.vue";
+import {useI18n} from "vue-i18n";
+
+const {t} = useI18n();
 
 const showAddModal = ref(false);
+const selectedCustomer = ref(null); // Для редактирования
 const isLoading = ref(false);
 const selectedClients = ref([]);
 const store = useStore();
@@ -14,6 +18,14 @@ const clients = computed(() => store.getters.getCustomers);
 const selectedCount = computed(
   () => selectedClients.value.length,
 );
+const allSelected = computed(() => {
+  return (
+    clients.value.length > 0 &&
+    clients.value.every((client) =>
+      selectedClients.value.includes(client.id),
+    )
+  );
+});
 
 const toggleClientSelection = (clientId) => {
   const index = selectedClients.value.indexOf(clientId);
@@ -24,8 +36,8 @@ const toggleClientSelection = (clientId) => {
   }
 };
 
-const selectAll = () => {
-  if (selectedClients.value.length === clients.value.length) {
+const toggleSelectAll = () => {
+  if (allSelected.value) {
     selectedClients.value = [];
   } else {
     selectedClients.value = clients.value.map((c) => c.id);
@@ -53,18 +65,26 @@ const deleteSelectedClients = async () => {
     await loadClients();
   } catch (error) {
     console.error("Delete failed:", error);
+    alert("Ошибка при удалении клиентов");
   } finally {
     isLoading.value = false;
   }
 };
 
 const openAddModal = () => {
+  selectedCustomer.value = null;
   showAddModal.value = true;
 };
 
-const onClientCreated = async () => {
+const editCustomer = (customer) => {
+  selectedCustomer.value = customer;
+  showAddModal.value = true;
+};
+
+const onClientSaved = async () => {
   await loadClients();
   showAddModal.value = false;
+  selectedCustomer.value = null;
 };
 
 const loadClients = async () => {
@@ -79,6 +99,10 @@ const loadClients = async () => {
   }
 };
 
+const refreshData = () => {
+  loadClients();
+};
+
 onMounted(() => {
   loadClients();
 });
@@ -86,75 +110,79 @@ onMounted(() => {
 
 <template>
   <Sidebar />
-  <main>
+  <main class="sidebarred">
     <div class="column">
+      <!-- Заголовок и управление -->
       <div class="flex">
-        <button class="bordered flex" @click="openAddModal">
-          <p
-            class="phoenix-accent-text"
-            style="margin-top: 4px; padding: 0"
-          >
-            Добавить
-          </p>
-          <span class="material-icons little">add</span>
-        </button>
+        <div class="flex">
+          <button class="bordered flex" @click="refreshData">
+            <p
+              class="phoenix-accent-text"
+              style="margin-top: 4px; padding: 0"
+            >
+              {{ t("common.refresh") }}
+            </p>
+            <span class="material-icons little">refresh</span>
+          </button>
+        </div>
 
-        <button
-          class="bordered flex"
-          @click="deleteSelectedClients"
-          :disabled="selectedCount === 0 || isLoading"
-        >
-          <p
-            class="phoenix-accent-text"
-            style="margin-top: 4px; padding: 0"
-          >
-            Удалить
-          </p>
-          <span class="material-icons little">delete</span>
-        </button>
+        <div class="flex">
+          <button class="bordered flex" @click="openAddModal">
+            <p
+              class="phoenix-accent-text"
+              style="margin-top: 4px; padding: 0"
+            >
+              {{ t("common.add") }}
+            </p>
+            <span class="material-icons little">add</span>
+          </button>
+        </div>
 
-        <button
-          class="bordered flex"
-          @click="selectAll"
-          :disabled="!clients.length"
-        >
-          <p
-            class="phoenix-accent-text"
-            style="margin-top: 4px; padding: 0"
+        <div class="flex">
+          <button
+            class="bordered flex"
+            @click="deleteSelectedClients"
+            :disabled="selectedCount === 0 || isLoading"
           >
-            {{
-              selectedCount === clients.length ?
-                "Снять все"
-              : "Выбрать все"
-            }}
-          </p>
-        </button>
+            <p
+              class="phoenix-accent-text"
+              style="margin-top: 4px; padding: 0"
+            >
+              {{ t("common.deleteSelected") }}
+            </p>
+            <span class="material-icons little">delete</span>
+          </button>
+        </div>
       </div>
 
       <hr />
 
-      <div class="clients-list">
-        <!-- Шапка таблицы - отображается один раз, если есть клиенты -->
-        <div
-          class="client-item header grid"
-          style="grid-template-columns: repeat(2, 1fr) 1fr 1fr"
-          v-if="clients.length"
-        >
-          <p></p>
-          <p class="header-text">
-            <strong>ФИО</strong>
+      <!-- Основная таблица клиентов -->
+      <div v-if="!isLoading" class="clients-table">
+        <div class="table-header grid">
+          <input
+            type="checkbox"
+            :checked="allSelected"
+            @change="toggleSelectAll"
+          />
+          <p>
+            <strong>{{ t("clients.fio") }}</strong>
           </p>
-          <p class="header-text">
-            <strong>Номер телефона</strong>
+          <p>
+            <strong>{{ t("clients.phone") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("clients.email") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("clients.edit") }}</strong>
           </p>
         </div>
 
-        <!-- Строки с данными клиентов -->
         <div
-          class="client-item grid"
-          style="grid-template-columns: repeat(2, 1fr) 1fr 1fr"
           v-for="client in clients"
           :key="client.id"
+          class="table-row grid"
         >
           <input
             type="checkbox"
@@ -162,64 +190,110 @@ onMounted(() => {
             :checked="selectedClients.includes(client.id)"
             @change="toggleClientSelection(client.id)"
           />
-          <p>{{ client.FIO }}</p>
-          <p>{{ client.phone }}</p>
+          <p>{{ client.FIO || "—" }}</p>
+          <p>{{ client.phone || "—" }}</p>
+          <p>{{ client.email || "—" }}</p>
+          <div class="actions">
+            <span
+              class="material-icons little"
+              @click="editCustomer(client)"
+            >
+              edit
+            </span>
+          </div>
         </div>
 
-        <div v-if="!clients.length" class="empty-state">
-          <p>Нет добавленных клиентов</p>
+        <div v-if="clients.length === 0" class="empty-state">
+          <p>{{ t("clients.noClients") }}</p>
         </div>
+      </div>
+
+      <div v-else class="loading">
+        {{ t("common.loading") }}
       </div>
 
       <NewCustomer
         v-if="showAddModal"
+        :customer="selectedCustomer"
         @close="showAddModal = false"
-        @success="onClientCreated"
+        @success="onClientSaved"
       />
     </div>
   </main>
 </template>
 
 <style scoped>
-.clients-list {
+.sidebarred {
+  flex: 1;
+  padding: 2rem;
+  overflow-x: auto;
+}
+
+.clients-table {
   margin-top: 1rem;
+  overflow-x: auto;
 }
 
-.client-item {
-  align-items: center;
+.table-header,
+.table-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr 1fr 100px;
   gap: 1rem;
+  align-items: center;
   padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.client-item:hover:not(.header) {
-  background-color: #f5f5f5;
-}
-
-.client-item.header {
-  border-bottom: 2px solid #ccc;
+.table-header {
+  border-bottom: 2px solid var(--secondary);
   margin-bottom: 0.5rem;
   font-weight: bold;
+  position: sticky;
+  top: 0;
+  background: var(--light);
+  z-index: 10;
 }
 
-.header-text {
-  color: #333;
-  font-size: 0.9rem;
+.table-row:hover {
+  background-color: var(--dark-alt);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions .material-icons {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--primary);
+  transition: transform 0.2s;
+}
+
+.actions .material-icons:hover {
+  transform: scale(1.1);
 }
 
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #999;
+  color: var(--grey);
 }
 
-/* Дополнительные стили для улучшения внешнего вида */
-.grid {
-  display: grid;
-  gap: 1rem;
+.loading {
+  text-align: center;
+  padding: 2rem;
 }
 
-.bordered {
-  margin-right: 0.5rem;
+@media (max-width: 900px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 50px 200px 150px 150px 80px;
+    min-width: 630px;
+  }
+
+  .sidebarred {
+    padding: 1rem;
+  }
 }
 </style>

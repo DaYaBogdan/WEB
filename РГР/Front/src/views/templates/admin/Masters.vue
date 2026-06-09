@@ -1,16 +1,26 @@
 <script setup>
 import Sidebar from "@/views/components/Sidebar.vue";
 import {onMounted, ref, computed} from "vue";
-import {useStore} from "vuex";
 import NewMaster from "@/views/components/NewMaster.vue";
 import api from "@/api";
 
 const showAddModal = ref(false);
-const selectedMasters = ref([]); // Переименовано с selectedClients
-const store = useStore();
-
+const selectedMaster = ref(null); // Для редактирования
+const selectedMasters = ref([]);
 const masters = ref([]);
 const isLoading = ref(false);
+
+const selectedCount = computed(
+  () => selectedMasters.value.length,
+);
+const allSelected = computed(() => {
+  return (
+    masters.value.length > 0 &&
+    masters.value.every((master) =>
+      selectedMasters.value.includes(master.id),
+    )
+  );
+});
 
 const loadMasters = async () => {
   isLoading.value = true;
@@ -25,10 +35,6 @@ const loadMasters = async () => {
   }
 };
 
-const selectedCount = computed(
-  () => selectedMasters.value.length,
-);
-
 const toggleMasterSelection = (masterId) => {
   const index = selectedMasters.value.indexOf(masterId);
   if (index === -1) {
@@ -38,8 +44,8 @@ const toggleMasterSelection = (masterId) => {
   }
 };
 
-const selectAll = () => {
-  if (selectedMasters.value.length === masters.value.length) {
+const toggleSelectAll = () => {
+  if (allSelected.value) {
     selectedMasters.value = [];
   } else {
     selectedMasters.value = masters.value.map((m) => m.id);
@@ -59,26 +65,37 @@ const deleteSelectedMasters = async () => {
 
   isLoading.value = true;
   try {
-    // ВАЖНО: нужно создать action deleteMasters в store или API
     await Promise.all(
       selectedMasters.value.map((id) => api.deleteMaster(id)),
     );
     selectedMasters.value = [];
-    await loadMasters(); // Перезагружаем мастеров
+    await loadMasters();
   } catch (error) {
     console.error("Delete failed:", error);
+    alert("Ошибка при удалении мастеров");
   } finally {
     isLoading.value = false;
   }
 };
 
 const openAddModal = () => {
+  selectedMaster.value = null;
   showAddModal.value = true;
 };
 
-const onMasterCreated = async () => {
-  await loadMasters(); // Обновляем список мастеров
+const editMaster = (master) => {
+  selectedMaster.value = master;
+  showAddModal.value = true;
+};
+
+const onMasterSaved = async () => {
+  await loadMasters();
   showAddModal.value = false;
+  selectedMaster.value = null;
+};
+
+const refreshData = () => {
+  loadMasters();
 };
 
 onMounted(() => {
@@ -88,78 +105,69 @@ onMounted(() => {
 
 <template>
   <Sidebar />
-  <main>
+  <main class="sidebarred">
     <div class="column">
       <div class="flex">
-        <button class="bordered flex" @click="openAddModal">
-          <p
-            class="phoenix-accent-text"
-            style="margin-top: 4px; padding: 0"
-          >
-            Добавить
-          </p>
-          <span class="material-icons little">add</span>
-        </button>
+        <div class="flex">
+          <button class="bordered flex" @click="refreshData">
+            <p
+              class="phoenix-accent-text"
+              style="margin-top: 4px; padding: 0"
+            >
+              Обновить
+            </p>
+            <span class="material-icons little">refresh</span>
+          </button>
+        </div>
 
-        <button
-          class="bordered flex"
-          @click="deleteSelectedMasters"
-          :disabled="selectedCount === 0 || isLoading"
-        >
-          <p
-            class="phoenix-accent-text"
-            style="margin-top: 4px; padding: 0"
-          >
-            Удалить
-          </p>
-          <span class="material-icons little">delete</span>
-        </button>
+        <div class="flex">
+          <button class="bordered flex" @click="openAddModal">
+            <p
+              class="phoenix-accent-text"
+              style="margin-top: 4px; padding: 0"
+            >
+              Добавить
+            </p>
+            <span class="material-icons little">add</span>
+          </button>
+        </div>
 
-        <button
-          class="bordered flex"
-          @click="selectAll"
-          :disabled="!masters.length"
-        >
-          <p
-            class="phoenix-accent-text"
-            style="margin-top: 4px; padding: 0"
+        <div class="flex">
+          <button
+            class="bordered flex"
+            @click="deleteSelectedMasters"
+            :disabled="selectedCount === 0 || isLoading"
           >
-            {{
-              selectedCount === masters.length ?
-                "Снять все"
-              : "Выбрать все"
-            }}
-          </p>
-        </button>
+            <p
+              class="phoenix-accent-text"
+              style="margin-top: 4px; padding: 0"
+            >
+              Удалить выбранные
+            </p>
+            <span class="material-icons little">delete</span>
+          </button>
+        </div>
       </div>
 
       <hr />
 
-      <div class="masters-list">
-        <!-- Шапка таблицы -->
-        <div
-          class="master-item header grid"
-          style="grid-template-columns: repeat(3, 1fr) 1fr 1fr"
-          v-if="masters.length"
-        >
-          <p></p>
-          <p class="header-text">
-            <strong>ФИО</strong>
-          </p>
-          <p class="header-text">
-            <strong>Логин</strong>
-          </p>
-          <p class="header-text">
-            <strong>Роль</strong>
-          </p>
+      <div v-if="!isLoading" class="masters-table">
+        <div class="table-header grid">
+          <input
+            type="checkbox"
+            :checked="allSelected"
+            @change="toggleSelectAll"
+          />
+          <p><strong>ФИО</strong></p>
+          <p><strong>Логин</strong></p>
+          <p><strong>Роль</strong></p>
+          <p><strong>Действия</strong></p>
         </div>
 
-        <!-- Строки с данными мастеров -->
         <div
-          class="master-item grid"
-          style="grid-template-columns: repeat(3, 1fr) 1fr 1fr"
           v-for="master in masters"
           :key="master.id"
+          class="table-row grid"
         >
           <input
             type="checkbox"
@@ -167,64 +175,108 @@ onMounted(() => {
             :checked="selectedMasters.includes(master.id)"
             @change="toggleMasterSelection(master.id)"
           />
-          <p>{{ master.fio }}</p>
-          <p>{{ master.login }}</p>
-          <p>{{ master.role }}</p>
+          <p>{{ master.fio || "—" }}</p>
+          <p>{{ master.login || "—" }}</p>
+          <p>{{ master.role || "—" }}</p>
+          <div class="actions">
+            <span
+              class="material-icons little"
+              @click="editMaster(master)"
+            >
+              edit
+            </span>
+          </div>
         </div>
 
-        <div v-if="!masters.length" class="empty-state">
+        <div v-if="masters.length === 0" class="empty-state">
           <p>Нет добавленных мастеров</p>
         </div>
       </div>
 
+      <div v-else class="loading">Загрузка...</div>
+
       <NewMaster
         v-if="showAddModal"
+        :master="selectedMaster"
         @close="showAddModal = false"
-        @success="onMasterCreated"
+        @success="onMasterSaved"
       />
     </div>
   </main>
 </template>
 
 <style scoped>
-.masters-list {
+.sidebarred {
+  flex: 1;
+  padding: 2rem;
+  overflow-x: auto;
+}
+
+.masters-table {
   margin-top: 1rem;
+  overflow-x: auto;
 }
 
-.master-item {
-  align-items: center;
+.table-header,
+.table-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr 1fr 100px;
   gap: 1rem;
+  align-items: center;
   padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.master-item:hover:not(.header) {
-  background-color: #f5f5f5;
-}
-
-.master-item.header {
-  border-bottom: 2px solid #ccc;
+.table-header {
+  border-bottom: 2px solid var(--secondary);
   margin-bottom: 0.5rem;
   font-weight: bold;
+  position: sticky;
+  top: 0;
+  background: var(--light);
+  z-index: 10;
 }
 
-.header-text {
-  color: #333;
-  font-size: 0.9rem;
+.table-row:hover {
+  background-color: var(--dark-alt);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.actions .material-icons {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--primary);
+  transition: transform 0.2s;
+}
+
+.actions .material-icons:hover {
+  transform: scale(1.1);
 }
 
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #999;
+  color: var(--grey);
 }
 
-.grid {
-  display: grid;
-  gap: 1rem;
+.loading {
+  text-align: center;
+  padding: 2rem;
 }
 
-.bordered {
-  margin-right: 0.5rem;
+@media (max-width: 900px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 50px 200px 150px 120px 80px;
+    min-width: 600px;
+  }
+
+  .sidebarred {
+    padding: 1rem;
+  }
 }
 </style>

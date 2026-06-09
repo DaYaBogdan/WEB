@@ -1,9 +1,8 @@
-# app/api/auth/register.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
-from app.models.user import User
+from app.models import User, Settings
 from app.schemas.User import UserCreate, UserResponse
 from app.security import get_password_hash
 
@@ -32,8 +31,21 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
         role='master'
     )
     db.add(new_user)
+    
+    # Создаём настройки
+    settings = Settings(
+        user_id=new_user.id,  # ID пока None, но после flush заполнится
+        theme="light",
+        language="ru"
+    )
+    db.add(settings)
+    
+    # Один коммит для обеих операций
     await db.commit()
+    
+    # Обновляем оба объекта
     await db.refresh(new_user)
+    await db.refresh(settings)
     
     # Возвращаем данные пользователя (без пароля)
     return new_user
