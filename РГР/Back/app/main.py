@@ -7,20 +7,14 @@ from app.api.apiRouter import api_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Этот код выполнится ПРИ ЗАПУСКЕ приложения
     print("Starting up...")
-    # Движок уже создан, ничего делать не нужно, если только вы не хотите проверить соединение
-    # Например, можно выполнить простой запрос для проверки:
-    # async with engine.connect() as conn:
-    #     await conn.execute("SELECT 1")
     yield
-    # Этот код выполнится ПРИ ОСТАНОВКЕ приложения
     print("Shutting down...")
-    await engine.dispose() # Закрываем все соединения в пуле
+    await engine.dispose()
 
 app = FastAPI(lifespan=lifespan)
 
-origins = ["*"]
+# origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,

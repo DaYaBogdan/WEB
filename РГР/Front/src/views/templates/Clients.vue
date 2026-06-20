@@ -172,10 +172,10 @@ onMounted(() => {
             <strong>{{ t("clients.phone") }}</strong>
           </p>
           <p>
-            <strong>{{ t("clients.email") }}</strong>
+            <strong>Email</strong>
           </p>
           <p>
-            <strong>{{ t("clients.edit") }}</strong>
+            <strong>{{ t("common.edit") }}</strong>
           </p>
         </div>
 

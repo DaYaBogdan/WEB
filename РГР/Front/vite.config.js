@@ -7,10 +7,10 @@ import VueDevTools from "vite-plugin-vue-devtools";
 export default defineConfig({
   plugins: [
     vue(),
-    VueDevTools(), //-------- Потом отрубить
+    // VueDevTools(), //-------- Потом отрубить
     VitePWA({
       devOptions: {
-        enabled: false, // Пока отрублено
+        // enabled: false, // Пока отрублено
       },
       registerType: "autoUpdate",
       includeAssets: [

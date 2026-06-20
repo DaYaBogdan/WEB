@@ -306,6 +306,10 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.success-notification .material-icons {
+  color: var(--light);
+}
+
 .settings-header {
   text-align: center;
   margin-bottom: 2rem;

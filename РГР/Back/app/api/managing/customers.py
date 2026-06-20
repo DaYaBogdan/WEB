@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from app.database import get_db
-from app.models.__init__ import Customer, Task
+from app.models.__init__ import Customer, Task, User
 from app.schemas.Customer import CustomerCreate, CustomerUpdate, CustomerResponse
 
 router = APIRouter()
@@ -26,6 +26,7 @@ async def create_customer(
     
     # Создаём нового клиента (поля created_at и updated_at добавятся автоматически)
     new_customer = Customer(
+        masterID=customer_data.masterID,
         FIO=customer_data.FIO,
         phone=customer_data.phone,
         email=customer_data.email
@@ -38,12 +39,36 @@ async def create_customer(
     return new_customer
 
 # GET - получить всех клиентов
-@router.get("/getAllClients", response_model=list[CustomerResponse])
+@router.get("/getAllClients/{masterID}", response_model=list[CustomerResponse])
 async def get_all_customers(
+    masterID: int,
     skip: int = 0,
     limit: int = 100,
     db: AsyncSession = Depends(get_db)
 ):
+    result = await db.execute(
+        select(Customer).where(Customer.masterID == masterID).offset(skip).limit(limit).order_by(Customer.id)
+    )
+    customers = result.scalars().all()
+    return customers
+
+# GET - получить всех клиентов
+@router.get("/getAllClientsMaster/{masterID}", response_model=list[CustomerResponse])
+async def get_all_customers(
+    masterID: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
+    
+    result = await db.execute(
+        select(User).where(User.id == masterID)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user or user.role != 'admin':
+        raise HTTPException(status_code=403, detail="Недостаточно прав для выполнения операции")
+    
     result = await db.execute(
         select(Customer).offset(skip).limit(limit).order_by(Customer.id)
     )

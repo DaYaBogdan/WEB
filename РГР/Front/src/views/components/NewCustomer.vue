@@ -3,8 +3,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="phoenix-accent-text">
-          {{ isEdit ? "Редактирование" : "Добавление" }}
-          клиента
+          {{
+            isEdit ? t("common.edit") : t("clients.addClient")
+          }}
         </h2>
         <button class="close-btn" @click="closeModal">
           <span class="material-icons">close</span>
@@ -13,7 +14,7 @@
 
       <form @submit.prevent="submitForm">
         <div class="form-group">
-          <label for="FIO">Фамилия Имя Отчество *</label>
+          <label for="FIO">{{ t("clients.fio") }} *</label>
           <input
             id="FIO"
             type="text"
@@ -27,7 +28,7 @@
         </div>
 
         <div class="form-group">
-          <label for="Phone">Телефон *</label>
+          <label for="Phone">{{ t("clients.phone") }} *</label>
           <input
             id="Phone"
             type="tel"
@@ -60,7 +61,7 @@
             class="cancel-btn"
             @click="closeModal"
           >
-            Отмена
+            {{ t("common.cancel") }}
           </button>
           <button
             type="submit"
@@ -69,7 +70,9 @@
           >
             <span v-if="isLoading" class="spinner"></span>
             <span v-else>{{
-              isEdit ? "Сохранить" : t("addNew")
+              isEdit ?
+                t("common.save")
+              : t("clients.addClient")
             }}</span>
           </button>
         </div>
@@ -82,8 +85,11 @@
 import {ref, onMounted} from "vue";
 import api from "@/api";
 import {useI18n} from "vue-i18n";
+import {useStore} from "vuex";
 
 const {t} = useI18n();
+
+const store = useStore();
 
 const props = defineProps({
   customer: {
@@ -109,13 +115,15 @@ const validateForm = () => {
   const newErrors = {};
 
   if (!form.value.fio || !form.value.fio.trim()) {
-    newErrors.fio = "Введите ФИО клиента";
+    newErrors.fio = t("errors.clients.fio");
   } else if (form.value.fio.length < 3) {
-    newErrors.fio = "ФИО должно содержать минимум 3 символа";
+    newErrors.fio = t("errors.clients.fiomin3");
+  } else if (form.value.fio.length > 50) {
+    newErrors.fio = t("errors.clients.fiomax50");
   }
 
   if (!form.value.phone || !form.value.phone.trim()) {
-    newErrors.phone = "Введите номер телефона";
+    newErrors.phone = t("errors.clients.phone");
   } else {
     // Очищаем номер от лишних символов
     let cleanPhone = form.value.phone.replace(/[^\d+]/g, "");
@@ -128,8 +136,7 @@ const validateForm = () => {
       !phoneRegex.test(cleanPhone) &&
       !phoneRegexAlt.test(cleanPhone)
     ) {
-      newErrors.phone =
-        "Введите номер в формате +7XXXXXXXXXX (11 цифр после +7)";
+      newErrors.phone = t("errors.clients.phoneregex");
     }
   }
 
@@ -173,6 +180,7 @@ const submitForm = async () => {
 
   try {
     const customerData = {
+      masterID: store.getters.getID,
       FIO: form.value.fio.trim(),
       phone: formatPhone(form.value.phone),
       email: form.value.email?.trim() || null,

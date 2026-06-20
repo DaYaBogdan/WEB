@@ -5,13 +5,6 @@ import store from "./store";
 import networkStatus from "../plugins/networkStatus.js";
 import i18n from "./i18n";
 
-import "vuetify/styles";
-import {createVuetify} from "vuetify";
-import * as components from "vuetify/components";
-import * as directives from "vuetify/directives";
-
-const vuetify = createVuetify({components, directives});
-
 const app = createApp(App);
 
 // Регистрация Service Worker для PWA
@@ -76,7 +69,6 @@ window.addEventListener("offline", () => {
 app
   .use(router)
   .use(store)
-  .use(vuetify)
   .use(networkStatus)
   .use(i18n)
   .mount("#app");

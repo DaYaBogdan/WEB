@@ -2,7 +2,9 @@
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="phoenix-accent-text">Создание записи</h2>
+        <h2 class="phoenix-accent-text">
+          {{ t("tasks.addTask") }}
+        </h2>
         <button class="close-btn" @click="closeModal">
           <span class="material-icons">close</span>
         </button>
@@ -10,14 +12,16 @@
 
       <form @submit.prevent="submitForm">
         <div class="form-group">
-          <label for="customer">Клиент</label>
+          <label for="customer">{{ t("tasks.client") }}</label>
           <select
             id="customer"
             v-model="form.customer_id"
             required
             :class="{error: errors.customer_id}"
           >
-            <option value="">Выберите клиента</option>
+            <option value="">
+              {{ t("tasks.clientChoose") }}
+            </option>
             <option
               v-for="customer in customers"
               :key="customer.id"
@@ -32,7 +36,7 @@
         </div>
 
         <div class="form-group">
-          <label for="service">Услуга</label>
+          <label for="service">{{ t("tasks.service") }}</label>
           <input
             id="service"
             type="text"
@@ -48,7 +52,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="date">Дата</label>
+            <label for="date">{{ t("tasks.date") }}</label>
             <input
               id="date"
               type="date"
@@ -62,7 +66,7 @@
           </div>
 
           <div class="form-group">
-            <label for="time">Время</label>
+            <label for="time">{{ t("tasks.time") }}</label>
             <input
               id="time"
               type="time"
@@ -77,7 +81,7 @@
         </div>
 
         <div class="form-group">
-          <label for="cost">Стоимость (₽)</label>
+          <label for="cost">{{ t("tasks.cost") }} (₽)</label>
           <input
             id="cost"
             type="number"
@@ -99,7 +103,7 @@
             class="cancel-btn"
             @click="closeModal"
           >
-            Отмена
+            {{ t("common.cancel") }}
           </button>
           <button
             type="submit"
@@ -107,7 +111,7 @@
             :disabled="isLoading"
           >
             <span v-if="isLoading" class="spinner"></span>
-            <span v-else>Создать запись</span>
+            <span v-else>{{ t("tasks.addTask") }}</span>
           </button>
         </div>
       </form>
@@ -119,6 +123,9 @@
 import {ref, computed, onMounted} from "vue";
 import {useStore} from "vuex";
 import api from "@/api";
+import {useI18n} from "vue-i18n";
+
+const {t} = useI18n();
 
 const props = defineProps({
   masterId: {
@@ -262,7 +269,7 @@ const closeModal = () => {
 }
 
 .modal-content {
-  background: white;
+  background: var(--light);
   border-radius: 20px;
   width: 90%;
   max-width: 500px;
@@ -302,7 +309,7 @@ const closeModal = () => {
 
     .material-icons {
       font-size: 24px;
-      color: #666;
+      color: var(--grey);
     }
   }
 }
@@ -326,10 +333,12 @@ form {
   select {
     width: 100%;
     padding: 10px 12px;
-    border: 2px solid #e0e0e0;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s;
+    background: var(--light);
+    color: var(--text-color);
 
     &:focus {
       outline: none;
@@ -373,11 +382,11 @@ form {
   }
 
   .cancel-btn {
-    background: #f5f5f5;
-    color: #666;
+    background: var(--dark-alt);
+    color: var(--grey);
 
     &:hover {
-      background: #e0e0e0;
+      background: var(--border-color);
     }
   }
 

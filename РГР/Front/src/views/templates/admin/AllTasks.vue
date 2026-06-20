@@ -40,7 +40,9 @@
       <!-- Фильтры -->
       <div class="filters">
         <select v-model="filters.masterId" class="bordered">
-          <option :value="null">{{ t("tasks") }}</option>
+          <option :value="null">
+            {{ t("tasks.filters.master") }}
+          </option>
           <option
             v-for="master in mastersList"
             :key="master.id"
@@ -58,7 +60,7 @@
         />
 
         <button @click="clearFilters" class="bordered">
-          Сбросить фильтры
+          {{ t("tasks.filters.clear") }}
         </button>
       </div>
 
@@ -72,12 +74,24 @@
             :checked="allSelected"
             @change="toggleSelectAll"
           />
-          <p><strong>Мастер</strong></p>
-          <p><strong>Дата</strong></p>
-          <p><strong>Время</strong></p>
-          <p><strong>Клиент</strong></p>
-          <p><strong>Услуга</strong></p>
-          <p><strong>Цена</strong></p>
+          <p>
+            <strong>{{ t("tasks.master") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.date") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.time") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.client") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.service") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.cost") }}</strong>
+          </p>
         </div>
 
         <div
@@ -102,11 +116,13 @@
           v-if="filteredTasks.length === 0"
           class="empty-state"
         >
-          <p>Нет задач для отображения</p>
+          <p>{{ t("tasks.noTasks") }}</p>
         </div>
       </div>
 
-      <div v-else class="loading">Загрузка...</div>
+      <div v-else class="loading">
+        {{ t("common.loading") }}
+      </div>
     </div>
   </main>
 </template>
@@ -116,7 +132,9 @@ import {ref, computed, onMounted} from "vue";
 import Sidebar from "@/views/components/Sidebar.vue";
 import api from "@/api";
 import {useI18n} from "vue-i18n";
+import {useStore} from "vuex";
 
+const store = useStore();
 const {t} = useI18n();
 // Состояние
 const isLoading = ref(false);
@@ -175,7 +193,6 @@ const fetchAllTasks = async () => {
   isLoading.value = true;
   try {
     const response = await api.getAllTasks();
-    // Если API возвращает { tasks: [...] }
     allTasks.value = response.data.tasks || response.data;
     console.log("All tasks loaded:", allTasks.value.length);
   } catch (error) {
@@ -197,7 +214,9 @@ const fetchMasters = async () => {
 
 const fetchCustomers = async () => {
   try {
-    const response = await api.getCustomers();
+    const response = await api.getAllCustomers(
+      store.getters.getID,
+    );
     customersList.value = response.data;
     console.log(
       "Customers loaded:",
@@ -274,12 +293,21 @@ const deleteSelectedTasks = async () => {
 
   isLoading.value = true;
   try {
-    await api.deleteTasks(selectedTaskIds.value);
+    // Удаляем каждую задачу по отдельности с помощью api.deleteTask
+    const deletePromises = selectedTaskIds.value.map(
+      (taskId) => api.deleteTask(taskId),
+    );
+
+    await Promise.all(deletePromises);
+
     selectedTaskIds.value = [];
     await fetchAllTasks();
+    alert(`Успешно удалено ${deletePromises.length} задач`);
   } catch (error) {
     console.error("Delete failed:", error);
-    alert("Ошибка при удалении задач");
+    alert(
+      "Ошибка при удалении задач. Возможно, некоторые задачи не были удалены.",
+    );
   } finally {
     isLoading.value = false;
   }
@@ -359,7 +387,7 @@ onMounted(() => {
 }
 
 .table-row:hover {
-  background-color: #f5f5f5;
+  background-color: var(--dark-alt);
 }
 
 .empty-state {
@@ -390,5 +418,26 @@ onMounted(() => {
   .sidebarred {
     padding: 1rem;
   }
+}
+
+/* Это самое важное - стили для option */
+.filters select option {
+  background-color: var(--light);
+  color: var(--text-color);
+}
+
+/* Если не работает в Chrome, добавьте это */
+.filters select option:checked,
+.filters select option:hover {
+  background-color: var(--dark-alt);
+  color: var(--text-color);
+}
+
+/* Остальные ваши стили остаются без изменений */
+.filters select,
+.filters input,
+.filters button {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
 }
 </style>

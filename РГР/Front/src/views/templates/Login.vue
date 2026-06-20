@@ -35,7 +35,7 @@ const login = async () => {
         />
       </div>
       <button
-        class="bordered filled"
+        class="bordered"
         style="min-width: 30%"
         type="submit"
       >

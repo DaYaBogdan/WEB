@@ -3,7 +3,9 @@ import Sidebar from "@/views/components/Sidebar.vue";
 import {onMounted, ref, computed} from "vue";
 import NewMaster from "@/views/components/NewMaster.vue";
 import api from "@/api";
+import {useI18n} from "vue-i18n";
 
+const {t} = useI18n();
 const showAddModal = ref(false);
 const selectedMaster = ref(null); // Для редактирования
 const selectedMasters = ref([]);
@@ -114,7 +116,7 @@ onMounted(() => {
               class="phoenix-accent-text"
               style="margin-top: 4px; padding: 0"
             >
-              Обновить
+              {{ t("common.refresh") }}
             </p>
             <span class="material-icons little">refresh</span>
           </button>
@@ -126,7 +128,7 @@ onMounted(() => {
               class="phoenix-accent-text"
               style="margin-top: 4px; padding: 0"
             >
-              Добавить
+              {{ t("common.add") }}
             </p>
             <span class="material-icons little">add</span>
           </button>
@@ -142,7 +144,7 @@ onMounted(() => {
               class="phoenix-accent-text"
               style="margin-top: 4px; padding: 0"
             >
-              Удалить выбранные
+              {{ t("common.deleteSelected") }}
             </p>
             <span class="material-icons little">delete</span>
           </button>
@@ -158,10 +160,18 @@ onMounted(() => {
             :checked="allSelected"
             @change="toggleSelectAll"
           />
-          <p><strong>ФИО</strong></p>
-          <p><strong>Логин</strong></p>
-          <p><strong>Роль</strong></p>
-          <p><strong>Действия</strong></p>
+          <p>
+            <strong>{{ t("masters.fio") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("masters.login") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("masters.role") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("common.edit") }}</strong>
+          </p>
         </div>
 
         <div
@@ -189,11 +199,13 @@ onMounted(() => {
         </div>
 
         <div v-if="masters.length === 0" class="empty-state">
-          <p>Нет добавленных мастеров</p>
+          <p>{{ t("masters.noMasters") }}</p>
         </div>
       </div>
 
-      <div v-else class="loading">Загрузка...</div>
+      <div v-else class="loading">
+        {{ t("common.loading") }}
+      </div>
 
       <NewMaster
         v-if="showAddModal"

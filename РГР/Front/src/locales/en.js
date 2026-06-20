@@ -57,10 +57,7 @@ export default {
     addClient: "Add client",
     fio: "Full name",
     phone: "Phone",
-    email: "Email",
     noClients: "No clients added",
-    addNew: "Add client",
-    edit: "Edit client",
   },
   masters: {
     title: "Masters",
@@ -70,8 +67,10 @@ export default {
     password: "Password",
     role: "Role",
     noMasters: "No masters added",
-    addNew: "Add master",
-    edit: "Edit master",
+    roles: {
+      admin: "Admin",
+      master: "Master",
+    },
   },
   tasks: {
     title: "All tasks",
@@ -80,6 +79,7 @@ export default {
     date: "Date",
     time: "Time",
     client: "Client",
+    clientChoose: "Choose client",
     service: "Service",
     cost: "Price",
     noTasks: "No tasks to display",
@@ -87,6 +87,33 @@ export default {
       master: "All masters",
       date: "Filter by date",
       clear: "Clear filters",
+    },
+  },
+  missing: {
+    no_page: "There is no page with this URL",
+  },
+  errors: {
+    masters: {
+      fio: "Input masters full name",
+      fiomin3: "Full name should have at least 3 symbols",
+      fiomax100: "Full shouldn't have more than 100 symbols",
+
+      login: "Input masters login",
+      loginmin3: "Login should have at least 3 symbols",
+      loginmax50: "Login shouldn't have more than 50 symbols",
+
+      password: "Input masters password",
+      passwordmin6: "Password should have at least 6 symbols",
+    },
+    clients: {
+      fio: "Input clients full name",
+      fiomin3: "Full name should have more than 3 symbols",
+      fiomax50:
+        "Full name shouldn't have more than 50 symbols",
+
+      phone: "Input clients phone",
+      phoneregex:
+        "Input phone in this format: +7XXXXXXXXXX (10 symbols after +7)",
     },
   },
 };

@@ -3,8 +3,9 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="phoenix-accent-text">
-          {{ isEdit ? "Редактирование" : "Добавление" }}
-          мастера
+          {{
+            isEdit ? t("common.edit") : t("masters.addMaster")
+          }}
         </h2>
         <button class="close-btn" @click="closeModal">
           <span class="material-icons">close</span>
@@ -13,7 +14,7 @@
 
       <form @submit.prevent="submitForm">
         <div class="form-group">
-          <label for="FIO">Фамилия Имя Отчество *</label>
+          <label for="FIO">{{ t("masters.fio") }} *</label>
           <input
             id="FIO"
             type="text"
@@ -27,7 +28,7 @@
         </div>
 
         <div class="form-group">
-          <label for="Login">Логин *</label>
+          <label for="Login">{{ t("masters.login") }} *</label>
           <input
             id="Login"
             type="text"
@@ -46,8 +47,8 @@
 
         <div class="form-group">
           <label for="Password">
-            Пароль
-            <span v-if="!isEdit" class="required">*</span>
+            {{ t("masters.password") }}
+            <span v-if="!isEdit">*</span>
             <span v-else class="optional"
               >(оставьте пустым, чтобы не менять)</span
             >
@@ -69,14 +70,18 @@
         </div>
 
         <div class="form-group" v-if="isEdit">
-          <label for="Role">Роль</label>
+          <label for="Role">{{ t("masters.role") }}</label>
           <select
             id="Role"
             v-model="form.role"
             :class="{error: errors.role}"
           >
-            <option value="master">Мастер</option>
-            <option value="admin">Администратор</option>
+            <option value="master">
+              {{ t("masters.roles.master") }}
+            </option>
+            <option value="admin">
+              {{ t("masters.roles.admin") }}
+            </option>
           </select>
           <span v-if="errors.role" class="error-text">{{
             errors.role
@@ -89,7 +94,7 @@
             class="cancel-btn"
             @click="closeModal"
           >
-            Отмена
+            {{ t("common.cancel") }}
           </button>
           <button
             type="submit"
@@ -98,7 +103,9 @@
           >
             <span v-if="isLoading" class="spinner"></span>
             <span v-else>{{
-              isEdit ? "Сохранить" : "Добавить мастера"
+              isEdit ?
+                t("common.save")
+              : t("masters.addMaster")
             }}</span>
           </button>
         </div>
@@ -110,7 +117,9 @@
 <script setup>
 import {ref, onMounted} from "vue";
 import api from "@/api";
+import {useI18n} from "vue-i18n";
 
+const {t} = useI18n();
 const props = defineProps({
   master: {
     type: Object,
@@ -137,43 +146,31 @@ const validateForm = () => {
 
   // Валидация ФИО
   if (!form.value.fio || !form.value.fio.trim()) {
-    newErrors.fio = "Введите ФИО мастера";
+    newErrors.fio = t("errors.masters.fio");
   } else if (form.value.fio.length < 3) {
-    newErrors.fio = "ФИО должно содержать минимум 3 символа";
+    newErrors.fio = t("errors.masters.fiomin3");
   } else if (form.value.fio.length > 100) {
-    newErrors.fio = "ФИО не должно превышать 100 символов";
+    newErrors.fio = t("errors.masters.fiomax100");
   }
 
   // Валидация логина (только для нового мастера)
   if (!isEdit.value) {
     if (!form.value.login || !form.value.login.trim()) {
-      newErrors.login = "Введите логин мастера";
+      newErrors.login = t("errors.masters.login");
     } else if (form.value.login.length < 3) {
-      newErrors.login =
-        "Логин должен содержать минимум 3 символа";
+      newErrors.login = t("errors.masters.loginmin3");
     } else if (form.value.login.length > 50) {
-      newErrors.login =
-        "Логин не должен превышать 50 символов";
-    } else if (!/^[a-zA-Z0-9_]+$/.test(form.value.login)) {
-      newErrors.login =
-        "Логин может содержать только буквы, цифры и знак подчеркивания";
+      newErrors.login = t("errors.masters.loginmax50");
     }
   }
 
   // Валидация пароля
   if (!isEdit.value) {
     if (!form.value.password) {
-      newErrors.password = "Введите пароль";
+      newErrors.password = t("errors.masters.password");
     } else if (form.value.password.length < 6) {
-      newErrors.password =
-        "Пароль должен содержать минимум 6 символов";
+      newErrors.password = t("errors.masters.passwordmin6");
     }
-  } else if (
-    form.value.password &&
-    form.value.password.length < 6
-  ) {
-    newErrors.password =
-      "Пароль должен содержать минимум 6 символов";
   }
 
   errors.value = newErrors;

@@ -46,7 +46,6 @@ async def pushTask(
         LOCAL_TIMEZONE = timezone(timedelta(hours=3))
         
         if task_data.datetime.tzinfo is None:
-            # Если время без часового пояса, считаем что это UTC
             utc_time = task_data.datetime.replace(tzinfo=timezone.utc)
         else:
             utc_time = task_data.datetime
@@ -56,7 +55,7 @@ async def pushTask(
         # Берём дату из локального времени
         task_date = local_time.date()
         
-        pre_query_weekend = select(Weekend).where(Weekend.date == task_date)
+        pre_query_weekend = select(Weekend).where(Weekend.date == task_date).where(Weekend.master_id == task_data.master_id)
         weekend_result = await db.execute(pre_query_weekend)
         existing_weekend = weekend_result.scalar_one_or_none()
         

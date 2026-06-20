@@ -26,7 +26,7 @@ async def login(
     
     # Проверка пароля
     if not user or not verify_password(login_data.password, user.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        raise HTTPException(status_code=401, detail="Неправильный логин или пароль")
 
     return {"user": UserResponse.model_validate(user), "settings": settings, "access_token": "sfsfrhgereh"}
 

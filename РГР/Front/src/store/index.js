@@ -65,6 +65,7 @@ export default createStore({
     error: null,
   },
   getters: {
+    getID: (state) => state.user.id,
     isLogged: (state) => !!state.user,
     userRole: (state) => state.user?.role || "guest",
     getTasks: (state) => state.tasks,
@@ -256,7 +257,7 @@ export default createStore({
           );
         }
 
-        const response = await api.getCustomers();
+        const response = await api.getCustomers(state.user.id);
 
         const customers = response.data || [];
 

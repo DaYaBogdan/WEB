@@ -2,8 +2,8 @@ import axios from "axios";
 
 const apiClient = axios.create({
   baseURL:
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:8000/api",
+    // import.meta.env.VITE_API_URL ||
+    "http://192.168.2.152:8000/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -21,13 +21,6 @@ apiClient.interceptors.request.use(
   },
   (error) => Promise.reject(error),
 );
-
-// apiClient.interceptors.request.use((config) => {
-//   console.log(
-//     `Отправка запроса: ${config.method?.toUpperCase()} ${config.url}`,
-//   );
-//   return config;
-// });
 
 //----------------------------------------------------------------------------
 export default {
@@ -51,10 +44,21 @@ export default {
   addCustomer(data) {
     return apiClient.post("managing/newClient", data);
   },
-  getCustomers() {
-    return apiClient.get("managing/getAllClients", {
-      params: {skip: 0, limit: 100},
-    });
+  getCustomers(masterID) {
+    return apiClient.get(
+      `managing/getAllClients/${masterID}`,
+      {
+        params: {skip: 0, limit: 100},
+      },
+    );
+  },
+  getAllCustomers(masterID) {
+    return apiClient.get(
+      `managing/getAllClientsMaster/${masterID}`,
+      {
+        params: {skip: 0, limit: 100},
+      },
+    );
   },
   updateCustomer(customer_id, customer_data) {
     return apiClient.put(
@@ -80,12 +84,12 @@ export default {
   getMasters() {
     return apiClient.get("masters/getAllMasters/");
   },
-  getMaster(masterId) {
-    return apiClient.get(`/masters/getMaster/${masterId}`);
+  getMaster(masterID) {
+    return apiClient.get(`/masters/getMaster/${masterID}`);
   },
-  updateMaster(masterId, masterData) {
+  updateMaster(masterID, masterData) {
     return apiClient.put(
-      `/masters/updateMaster/${masterId}`,
+      `/masters/updateMaster/${masterID}`,
       masterData,
     );
   },

@@ -5,6 +5,7 @@ import re
 
 class CustomerBase(BaseModel):
     """Базовые поля клиента"""
+    masterID: int 
     FIO: str = Field(..., min_length=2, max_length=255, description="ФИО клиента")
     phone: str = Field(..., description="Номер телефона")
     email: Optional[str] = Field(None, description="Email")  # Сделал необязательным
@@ -88,6 +89,7 @@ class CustomerUpdate(BaseModel):
 class CustomerResponse(BaseModel):
     """Для ответа с сервера (GET запрос)"""
     id: int
+    masterID: int
     FIO: str
     phone: str
     email: Optional[str] = None  # Сделал необязательным
