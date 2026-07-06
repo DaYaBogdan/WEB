@@ -126,129 +126,132 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="settings-page">
-    <Sidebar />
-    <div class="settings-content">
-      <div class="settings-container">
-        <Transition name="slide">
-          <div v-if="showSuccess" class="success-notification">
-            <span class="material-icons">check_circle</span>
-            <span>{{ t("settings.success") }}</span>
-          </div>
-        </Transition>
-
-        <div class="settings-header">
-          <h2 class="phoenix-accent-text">
-            {{ t("settings.title") }}
-          </h2>
-          <p>{{ t("settings.description") }}</p>
-        </div>
-
-        <div class="settings-form">
-          <!-- Выбор темы -->
-          <div class="settings-section">
-            <div class="section-header">
-              <span class="material-icons">palette</span>
-              <h3>{{ t("settings.theme") }}</h3>
+  <main>
+    <div class="settings-page sidebarred">
+      <Sidebar />
+      <div class="settings-content">
+        <div class="settings-container">
+          <Transition name="slide">
+            <div
+              v-if="showSuccess"
+              class="success-notification"
+            >
+              <span class="material-icons">check_circle</span>
+              <span>{{ t("settings.success") }}</span>
             </div>
+          </Transition>
 
-            <div class="theme-options">
-              <div
-                v-for="theme in themes"
-                :key="theme.value"
-                class="theme-card"
-                :class="{
-                  active: formData.theme === theme.value,
-                }"
-                @click="formData.theme = theme.value"
-              >
-                <span class="material-icons">{{
-                  theme.icon
-                }}</span>
-                <span class="theme-label">{{
-                  theme.label
-                }}</span>
+          <div class="settings-header">
+            <h2 class="phoenix-accent-text">
+              {{ t("settings.title") }}
+            </h2>
+            <p>{{ t("settings.description") }}</p>
+          </div>
+
+          <div class="settings-form">
+            <!-- Выбор темы -->
+            <div class="settings-section">
+              <div class="section-header">
+                <span class="material-icons">palette</span>
+                <h3>{{ t("settings.theme") }}</h3>
+              </div>
+
+              <div class="theme-options">
                 <div
-                  v-if="formData.theme === theme.value"
-                  class="active-indicator"
+                  v-for="theme in themes"
+                  :key="theme.value"
+                  class="theme-card"
+                  :class="{
+                    active: formData.theme === theme.value,
+                  }"
+                  @click="formData.theme = theme.value"
                 >
-                  <span class="material-icons">star</span>
+                  <span class="material-icons">{{
+                    theme.icon
+                  }}</span>
+                  <span class="theme-label">{{
+                    theme.label
+                  }}</span>
+                  <div
+                    v-if="formData.theme === theme.value"
+                    class="active-indicator"
+                  >
+                    <span class="material-icons">star</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Выбор языка -->
-          <div class="settings-section">
-            <div class="section-header">
-              <span class="material-icons">language</span>
-              <h3>{{ t("settings.language") }}</h3>
-            </div>
+            <!-- Выбор языка -->
+            <div class="settings-section">
+              <div class="section-header">
+                <span class="material-icons">language</span>
+                <h3>{{ t("settings.language") }}</h3>
+              </div>
 
-            <div class="language-options">
-              <div
-                v-for="lang in languages"
-                :key="lang.value"
-                class="language-card"
-                :class="{
-                  active: formData.language === lang.value,
-                }"
-                @click="formData.language = lang.value"
-              >
-                <span class="language-flag">{{
-                  lang.flag
-                }}</span>
-                <span class="language-label">{{
-                  lang.label
-                }}</span>
+              <div class="language-options">
                 <div
-                  v-if="formData.language === lang.value"
-                  class="active-indicator"
+                  v-for="lang in languages"
+                  :key="lang.value"
+                  class="language-card"
+                  :class="{
+                    active: formData.language === lang.value,
+                  }"
+                  @click="formData.language = lang.value"
                 >
-                  <span class="material-icons">star</span>
+                  <span class="language-flag">{{
+                    lang.flag
+                  }}</span>
+                  <span class="language-label">{{
+                    lang.label
+                  }}</span>
+                  <div
+                    v-if="formData.language === lang.value"
+                    class="active-indicator"
+                  >
+                    <span class="material-icons">star</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Кнопки действий -->
-          <div class="action-buttons">
-            <button
-              class="bordered"
-              @click="cancelChanges"
-              :disabled="isLoading"
-            >
-              {{ t("settings.cancel") }}
-            </button>
-            <button
-              class="bordered"
-              @click="saveSettings"
-              :disabled="isLoading"
-            >
-              <span v-if="!isLoading">{{
-                t("settings.save")
-              }}</span>
-              <span v-else class="loading-spinner">{{
-                t("common.loading")
-              }}</span>
-              <span
-                class="material-icons little"
-                v-if="!isLoading"
-                >save</span
+            <!-- Кнопки действий -->
+            <div class="action-buttons">
+              <button
+                class="bordered"
+                @click="cancelChanges"
+                :disabled="isLoading"
               >
-            </button>
+                {{ t("settings.cancel") }}
+              </button>
+              <button
+                class="bordered"
+                @click="saveSettings"
+                :disabled="isLoading"
+              >
+                <span v-if="!isLoading">{{
+                  t("settings.save")
+                }}</span>
+                <span v-else class="loading-spinner">{{
+                  t("common.loading")
+                }}</span>
+                <span
+                  class="material-icons little"
+                  v-if="!isLoading"
+                  >save</span
+                >
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
 /* Ваши существующие стили остаются без изменений */
 .settings-page {
-  display: flex;
-  min-height: 100vh;
   width: 100%;
 }
 
@@ -471,7 +474,6 @@ onMounted(() => {
   .settings-content {
     margin-left: 0;
     padding: 1rem;
-    padding-left: calc(2rem + 32px);
   }
 
   .settings-container {
@@ -484,7 +486,7 @@ onMounted(() => {
   }
 
   .action-buttons {
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .action-buttons button {

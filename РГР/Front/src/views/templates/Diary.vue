@@ -1,78 +1,3 @@
-<template>
-  <Sidebar />
-  <main class="sidebarred">
-    <div class="column">
-      <!-- Навигационная панель -->
-      <div class="flex">
-        <!-- Кнопка добавления записи -->
-        <div class="flex">
-          <button class="bordered flex" @click="openAddModal">
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
-              {{ t("diary.addTask") }}
-            </p>
-            <span class="material-icons little">add</span>
-          </button>
-        </div>
-
-        <!-- Кнопка удаления записи -->
-        <div class="flex">
-          <button
-            class="bordered flex"
-            @click="deleteSelectedTasks"
-            :disabled="selectedCount === 0 || isLoading"
-          >
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
-              {{ t("diary.deleteTask") }}
-            </p>
-            <span class="material-icons little">close</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Разделитель -->
-      <hr />
-
-      <NewTask
-        v-if="showAddModal"
-        :masterId="currentMasterId"
-        @close="showAddModal = false"
-        @success="onTaskCreated"
-      />
-
-      <!-- Основное тело еженедельника -->
-      <div class="grid" v-if="!isLoading">
-        <Day
-          v-for="(day, index) in weekDays"
-          :key="index"
-          :day="day"
-        />
-      </div>
-      <div v-else class="loading">
-        {{ t("common.loading") }}
-      </div>
-
-      <!-- Навигация между неделями -->
-      <div class="flex horizontal-align">
-        <button @click="prevWeek">
-          {{ t("diary.prevWeek") }}
-        </button>
-        <button @click="resetToToday">
-          {{ t("diary.resetWeek") }}
-        </button>
-        <button @click="nextWeek">
-          {{ t("diary.nextWeek") }}
-        </button>
-      </div>
-    </div>
-  </main>
-</template>
-
 <script setup>
 import Day from "../components/Day.vue";
 import {ref, computed, onMounted} from "vue";
@@ -251,10 +176,80 @@ onMounted(() => {
 });
 </script>
 
+<template>
+  <Sidebar />
+  <main class="sidebarred">
+    <div class="column">
+      <!-- Навигационная панель -->
+      <div class="grid-buttons">
+        <!-- Кнопка добавления записи -->
+        <div class="flex">
+          <button class="bordered flex" @click="openAddModal">
+            <p class="phoenix-accent-text buttons-text">
+              {{ t("diary.addTask") }}
+            </p>
+            <span class="material-icons little">add</span>
+          </button>
+        </div>
+
+        <!-- Кнопка удаления записи -->
+        <div class="flex">
+          <button
+            class="bordered flex"
+            @click="deleteSelectedTasks"
+            :disabled="selectedCount === 0 || isLoading"
+          >
+            <p class="phoenix-accent-text buttons-text">
+              {{ t("diary.deleteTask") }}
+            </p>
+            <span class="material-icons little">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Разделитель -->
+      <hr />
+
+      <NewTask
+        v-if="showAddModal"
+        :masterId="currentMasterId"
+        @close="showAddModal = false"
+        @success="onTaskCreated"
+      />
+
+      <!-- Основное тело еженедельника -->
+      <div class="grid" v-if="!isLoading">
+        <Day
+          v-for="(day, index) in weekDays"
+          :key="index"
+          :day="day"
+        />
+      </div>
+      <div v-else class="loading">
+        {{ t("common.loading") }}
+      </div>
+
+      <!-- Навигация между неделями -->
+      <div class="flex horizontal-align">
+        <button class="bordered" @click="prevWeek">
+          {{ t("diary.prevWeek") }}
+        </button>
+        <button class="bordered" @click="resetToToday">
+          {{ t("diary.resetWeek") }}
+        </button>
+        <button class="bordered" @click="nextWeek">
+          {{ t("diary.nextWeek") }}
+        </button>
+      </div>
+    </div>
+  </main>
+</template>
+
 <style lang="scss" scoped>
-.page-container {
+.flex {
   display: flex;
-  min-height: 100vh;
+  flex-direction: row;
+  gap: 2em;
 }
 
 .main-content {
@@ -262,5 +257,29 @@ onMounted(() => {
   margin-left: calc(2rem + 32px);
   padding: 2rem;
   transition: margin-left 0.2s ease-out;
+}
+
+.horizontal-align {
+  text-align: center;
+  justify-content: center;
+}
+
+.grid-buttons {
+  display: flex;
+  gap: 50px;
+}
+
+.buttons-text {
+  padding: 7px;
+}
+
+@media (max-width: 900px) {
+  .little {
+    padding: 4px;
+  }
+  .grid-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>

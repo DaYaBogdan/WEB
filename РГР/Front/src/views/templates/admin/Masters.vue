@@ -109,25 +109,10 @@ onMounted(() => {
   <Sidebar />
   <main class="sidebarred">
     <div class="column">
-      <div class="flex">
-        <div class="flex">
-          <button class="bordered flex" @click="refreshData">
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
-              {{ t("common.refresh") }}
-            </p>
-            <span class="material-icons little">refresh</span>
-          </button>
-        </div>
-
+      <div class="grid-buttons">
         <div class="flex">
           <button class="bordered flex" @click="openAddModal">
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
+            <p class="phoenix-accent-text buttons-text">
               {{ t("common.add") }}
             </p>
             <span class="material-icons little">add</span>
@@ -140,10 +125,7 @@ onMounted(() => {
             @click="deleteSelectedMasters"
             :disabled="selectedCount === 0 || isLoading"
           >
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
+            <p class="phoenix-accent-text buttons-text">
               {{ t("common.deleteSelected") }}
             </p>
             <span class="material-icons little">delete</span>
@@ -169,9 +151,9 @@ onMounted(() => {
           <p>
             <strong>{{ t("masters.role") }}</strong>
           </p>
-          <p>
+          <!-- <p>
             <strong>{{ t("common.edit") }}</strong>
-          </p>
+          </p> -->
         </div>
 
         <div
@@ -218,6 +200,21 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.flex {
+  display: flex;
+  flex-direction: row;
+  gap: 2em;
+}
+
+.grid-buttons {
+  display: flex;
+  gap: 50px;
+}
+
+.buttons-text {
+  padding: 7px;
+}
+
 .sidebarred {
   flex: 1;
   padding: 2rem;
@@ -232,7 +229,7 @@ onMounted(() => {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 50px 1fr 1fr 1fr 100px;
+  grid-template-columns: repeat(4, 1fr) 20px;
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 0.5rem;
@@ -283,12 +280,17 @@ onMounted(() => {
 @media (max-width: 900px) {
   .table-header,
   .table-row {
-    grid-template-columns: 50px 200px 150px 120px 80px;
-    min-width: 600px;
+    grid-template-columns: 10px repeat(3, 1fr) 20px;
   }
-
   .sidebarred {
     padding: 1rem;
+  }
+  .little {
+    padding: 4px;
+  }
+  .grid-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

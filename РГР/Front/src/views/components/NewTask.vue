@@ -40,6 +40,7 @@
           <input
             id="service"
             type="text"
+            class="text"
             v-model="form.service"
             placeholder="Например: Маникюр, Стрижка и т.д."
             required
@@ -443,6 +444,12 @@ form {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  input[type="text"] {
+    min-width: 200px;
   }
 }
 </style>

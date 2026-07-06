@@ -15,9 +15,7 @@ const login = async () => {
 </script>
 
 <template>
-  <main
-    class="column horizontal-align vertical-align without-sidebar"
-  >
+  <main class="column horizontal-align vertical-align">
     <span class="material-icons"> account_circle </span>
     <form @submit.prevent="login">
       <div class="column">
@@ -34,13 +32,43 @@ const login = async () => {
           v-model="form.password"
         />
       </div>
-      <button
-        class="bordered"
-        style="min-width: 30%"
-        type="submit"
-      >
+      <button class="bordered submit-button" type="submit">
         Вход
       </button>
     </form>
   </main>
 </template>
+
+<style lang="scss" scoped>
+.horizontal-align {
+  text-align: center;
+  justify-content: center;
+}
+
+.vertical-align {
+  margin: 0;
+  display: flex;
+  height: 100vh;
+  align-items: center;
+}
+
+.submit-button {
+  height: 40px;
+  width: 200px;
+  margin-top: 2em;
+}
+
+@media (max-width: 768px) {
+  .horizontal-align {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .vertical-align {
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    align-items: center;
+  }
+}
+</style>

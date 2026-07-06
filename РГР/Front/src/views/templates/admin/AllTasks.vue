@@ -1,132 +1,3 @@
-<template>
-  <Sidebar />
-  <main class="sidebarred">
-    <div class="column">
-      <!-- Заголовок и управление -->
-      <div class="flex">
-        <div class="flex">
-          <button class="bordered flex" @click="refreshData">
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
-              {{ t("common.refresh") }}
-            </p>
-            <span class="material-icons little">refresh</span>
-          </button>
-        </div>
-
-        <div class="flex">
-          <button
-            class="bordered flex"
-            @click="deleteSelectedTasks"
-            :disabled="
-              selectedTaskIds.length === 0 || isLoading
-            "
-          >
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
-              {{ t("common.deleteSelected") }}
-            </p>
-            <span class="material-icons little">delete</span>
-          </button>
-        </div>
-      </div>
-
-      <hr />
-
-      <!-- Фильтры -->
-      <div class="filters">
-        <select v-model="filters.masterId" class="bordered">
-          <option :value="null">
-            {{ t("tasks.filters.master") }}
-          </option>
-          <option
-            v-for="master in mastersList"
-            :key="master.id"
-            :value="master.id"
-          >
-            {{ master.fio || master.login }}
-          </option>
-        </select>
-
-        <input
-          type="date"
-          v-model="filters.date"
-          class="bordered"
-          placeholder="Фильтр по дате"
-        />
-
-        <button @click="clearFilters" class="bordered">
-          {{ t("tasks.filters.clear") }}
-        </button>
-      </div>
-
-      <hr />
-
-      <!-- Основная таблица задач -->
-      <div v-if="!isLoading" class="tasks-table">
-        <div class="table-header grid">
-          <input
-            type="checkbox"
-            :checked="allSelected"
-            @change="toggleSelectAll"
-          />
-          <p>
-            <strong>{{ t("tasks.master") }}</strong>
-          </p>
-          <p>
-            <strong>{{ t("tasks.date") }}</strong>
-          </p>
-          <p>
-            <strong>{{ t("tasks.time") }}</strong>
-          </p>
-          <p>
-            <strong>{{ t("tasks.client") }}</strong>
-          </p>
-          <p>
-            <strong>{{ t("tasks.service") }}</strong>
-          </p>
-          <p>
-            <strong>{{ t("tasks.cost") }}</strong>
-          </p>
-        </div>
-
-        <div
-          v-for="task in filteredTasks"
-          :key="task.id"
-          class="table-row grid"
-        >
-          <input
-            type="checkbox"
-            :value="task.id"
-            v-model="selectedTaskIds"
-          />
-          <p>{{ getMasterName(task.master_id) }}</p>
-          <p>{{ formatDate(task.dateTime) }}</p>
-          <p>{{ formatTime(task.dateTime) }}</p>
-          <p>{{ getCustomerName(task.customer_id) }}</p>
-          <p>{{ task.service || "—" }}</p>
-          <p>{{ task.cost || "—" }} ₽</p>
-        </div>
-
-        <div
-          v-if="filteredTasks.length === 0"
-          class="empty-state"
-        >
-          <p>{{ t("tasks.noTasks") }}</p>
-        </div>
-      </div>
-
-      <div v-else class="loading">
-        {{ t("common.loading") }}
-      </div>
-    </div>
-  </main>
-</template>
-
 <script setup>
 import {ref, computed, onMounted} from "vue";
 import Sidebar from "@/views/components/Sidebar.vue";
@@ -340,7 +211,149 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<template>
+  <Sidebar />
+  <main class="sidebarred">
+    <div class="column">
+      <!-- Заголовок и управление -->
+      <div class="grid-buttons">
+        <div class="flex">
+          <button class="bordered flex" @click="refreshData">
+            <p class="phoenix-accent-text buttons-text">
+              {{ t("common.refresh") }}
+            </p>
+            <span class="material-icons little">refresh</span>
+          </button>
+        </div>
+
+        <div class="flex">
+          <button
+            class="bordered flex"
+            @click="deleteSelectedTasks"
+            :disabled="
+              selectedTaskIds.length === 0 || isLoading
+            "
+          >
+            <p class="phoenix-accent-text buttons-text">
+              {{ t("common.deleteSelected") }}
+            </p>
+            <span class="material-icons little">delete</span>
+          </button>
+        </div>
+      </div>
+
+      <hr />
+
+      <!-- Фильтры -->
+      <div class="filters">
+        <select v-model="filters.masterId" class="bordered">
+          <option :value="null">
+            {{ t("tasks.filters.master") }}
+          </option>
+          <option
+            v-for="master in mastersList"
+            :key="master.id"
+            :value="master.id"
+          >
+            {{ master.fio || master.login }}
+          </option>
+        </select>
+
+        <input
+          type="date"
+          v-model="filters.date"
+          class="bordered"
+        />
+
+        <button @click="clearFilters" class="bordered">
+          <p class="buttons-text">
+            {{ t("tasks.filters.clear") }}
+          </p>
+        </button>
+      </div>
+
+      <hr />
+
+      <!-- Основная таблица задач -->
+      <div v-if="!isLoading" class="tasks-table">
+        <div class="table-header grid">
+          <input
+            type="checkbox"
+            :checked="allSelected"
+            @change="toggleSelectAll"
+          />
+          <p>
+            <strong>{{ t("tasks.master") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.date") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.time") }}</strong>
+          </p>
+          <p class="only-pc-visible">
+            <strong>{{ t("tasks.client") }}</strong>
+          </p>
+          <p class="only-pc-visible">
+            <strong>{{ t("tasks.service") }}</strong>
+          </p>
+          <p>
+            <strong>{{ t("tasks.cost") }}</strong>
+          </p>
+        </div>
+
+        <div
+          v-for="task in filteredTasks"
+          :key="task.id"
+          class="table-row grid"
+        >
+          <input
+            type="checkbox"
+            :value="task.id"
+            v-model="selectedTaskIds"
+          />
+          <p>{{ getMasterName(task.master_id) }}</p>
+          <p>{{ formatDate(task.dateTime) }}</p>
+          <p>{{ formatTime(task.dateTime) }}</p>
+          <p class="only-pc-visible">
+            {{ getCustomerName(task.customer_id) }}
+          </p>
+          <p class="only-pc-visible">
+            {{ task.service || "—" }}
+          </p>
+          <p>{{ task.cost || "—" }} ₽</p>
+        </div>
+
+        <div
+          v-if="filteredTasks.length === 0"
+          class="empty-state"
+        >
+          <p>{{ t("tasks.noTasks") }}</p>
+        </div>
+      </div>
+
+      <div v-else class="loading">
+        {{ t("common.loading") }}
+      </div>
+    </div>
+  </main>
+</template>
+<style scoped lang="scss">
+.flex {
+  display: flex;
+  flex-direction: row;
+  gap: 2em;
+}
+
+.grid-buttons {
+  display: flex;
+  gap: 50px;
+}
+
+.buttons-text {
+  padding: 7px;
+}
+
 .sidebarred {
   flex: 1;
   padding: 2rem;
@@ -369,7 +382,7 @@ onMounted(() => {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 50px 150px 120px 100px 1fr 150px 120px;
+  grid-template-columns: 10px repeat(6, 1fr);
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 0.5rem;
@@ -401,22 +414,23 @@ onMounted(() => {
   padding: 2rem;
 }
 
-@media (max-width: 1200px) {
-  .table-header,
-  .table-row {
-    grid-template-columns: 50px 150px 120px 100px 200px 150px 120px;
-  }
-}
-
 @media (max-width: 900px) {
   .table-header,
   .table-row {
-    grid-template-columns: 50px 150px 120px 100px 1fr 150px 120px;
-    min-width: 800px;
+    grid-template-columns: 10px repeat(4, 1fr);
   }
-
+  .only-pc-visible {
+    display: none;
+  }
   .sidebarred {
     padding: 1rem;
+  }
+  .little {
+    padding: 4px;
+  }
+  .grid-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

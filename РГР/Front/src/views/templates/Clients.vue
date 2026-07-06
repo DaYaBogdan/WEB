@@ -112,26 +112,10 @@ onMounted(() => {
   <Sidebar />
   <main class="sidebarred">
     <div class="column">
-      <!-- Заголовок и управление -->
-      <div class="flex">
-        <div class="flex">
-          <button class="bordered flex" @click="refreshData">
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
-              {{ t("common.refresh") }}
-            </p>
-            <span class="material-icons little">refresh</span>
-          </button>
-        </div>
-
+      <div class="grid-buttons">
         <div class="flex">
           <button class="bordered flex" @click="openAddModal">
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
+            <p class="phoenix-accent-text buttons-text">
               {{ t("common.add") }}
             </p>
             <span class="material-icons little">add</span>
@@ -144,10 +128,7 @@ onMounted(() => {
             @click="deleteSelectedClients"
             :disabled="selectedCount === 0 || isLoading"
           >
-            <p
-              class="phoenix-accent-text"
-              style="margin-top: 4px; padding: 0"
-            >
+            <p class="phoenix-accent-text buttons-text">
               {{ t("common.deleteSelected") }}
             </p>
             <span class="material-icons little">delete</span>
@@ -171,11 +152,8 @@ onMounted(() => {
           <p>
             <strong>{{ t("clients.phone") }}</strong>
           </p>
-          <p>
+          <p class="only-pc-visible">
             <strong>Email</strong>
-          </p>
-          <p>
-            <strong>{{ t("common.edit") }}</strong>
           </p>
         </div>
 
@@ -191,8 +169,12 @@ onMounted(() => {
             @change="toggleClientSelection(client.id)"
           />
           <p>{{ client.FIO || "—" }}</p>
-          <p>{{ client.phone || "—" }}</p>
-          <p>{{ client.email || "—" }}</p>
+          <p>
+            {{ client.phone || "—" }}
+          </p>
+          <p class="only-pc-visible">
+            {{ client.email || "—" }}
+          </p>
           <div class="actions">
             <span
               class="material-icons little"
@@ -223,6 +205,17 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.grid-buttons {
+  display: flex;
+  gap: 50px;
+}
+
+.flex {
+  display: flex;
+  flex-direction: row;
+  gap: 2em;
+}
+
 .sidebarred {
   flex: 1;
   padding: 2rem;
@@ -237,7 +230,7 @@ onMounted(() => {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 50px 1fr 1fr 1fr 100px;
+  grid-template-columns: 10px repeat(3, 1fr) 30px;
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 0.5rem;
@@ -285,11 +278,25 @@ onMounted(() => {
   padding: 2rem;
 }
 
+.buttons-text {
+  padding: 7px;
+}
+
 @media (max-width: 900px) {
+  .little {
+    padding: 4px;
+  }
+  .grid-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .only-pc-visible {
+    display: none;
+  }
   .table-header,
   .table-row {
-    grid-template-columns: 50px 200px 150px 150px 80px;
-    min-width: 630px;
+    grid-template-columns: 10px repeat(2, 1fr) 20px;
   }
 
   .sidebarred {

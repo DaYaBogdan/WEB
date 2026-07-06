@@ -25,6 +25,37 @@ const customers = computed(
   () => store.getters.getCustomers || [],
 );
 
+//---------------------Select All-------------------------
+const isAllSelected = computed(() => {
+  if (!props.day?.tasks || props.day.tasks.length === 0) {
+    return false;
+  }
+  return props.day.tasks.every((task) =>
+    selectedTaskIds.value.includes(task.id),
+  );
+});
+
+const toggleAllTasks = (event) => {
+  const isChecked = event.target.checked;
+  const taskIds = props.day.tasks.map((task) => task.id);
+
+  if (isChecked) {
+    // Выбираем все задачи
+    taskIds.forEach((taskId) => {
+      if (!selectedTaskIds.value.includes(taskId)) {
+        store.dispatch("toggleTaskSelection", taskId);
+      }
+    });
+  } else {
+    // Снимаем все задачи
+    taskIds.forEach((taskId) => {
+      if (selectedTaskIds.value.includes(taskId)) {
+        store.dispatch("removeTaskSelection", taskId);
+      }
+    });
+  }
+};
+
 //---------------------DeletingTasks-------------------------
 const isTaskSelected = (taskId) => {
   if (
@@ -133,7 +164,7 @@ watch(
       }"
     >
       <!-- Выходной день -->
-      <div class="weekend-content" v-if="isWeekend">
+      <div class="none-tasks-content" v-if="isWeekend">
         <p class="phoenix-accent-text base">
           {{ t("diary.weekend") }}
         </p>
@@ -144,14 +175,35 @@ watch(
         </button>
       </div>
 
-      <!-- Есть задачи -->
+      <!-- Нет задач -->
       <div
-        v-else-if="day.tasks && day.tasks.length > 0"
-        class="tasks-container"
+        class="none-tasks-content"
+        v-else-if="day.tasks.length <= 0"
       >
+        <p class="phoenix-accent-text base">
+          {{ t("diary.noTasks") }}
+        </p>
+        <button class="bordered flex" @click="makeWeekend">
+          <span class="material-icons little">event</span>
+          <p>{{ t("diary.makeWeekend") }}</p>
+          <span class="material-icons little"
+            >celebration</span
+          >
+        </button>
+      </div>
+
+      <!-- Есть задачи -->
+      <div v-else class="tasks-container">
         <!-- Заголовок таблицы -->
         <div class="tasks-header grid">
-          <p>{{ t("diary.table.select") }}</p>
+          <div class="select-all-wrap">
+            <input
+              type="checkbox"
+              :checked="isAllSelected"
+              @change="toggleAllTasks"
+              class="select-all-checkbox"
+            />
+          </div>
           <p>{{ t("diary.table.time") }}</p>
           <p>{{ t("diary.table.client") }}</p>
           <p>{{ t("diary.table.service") }}</p>
@@ -174,20 +226,6 @@ watch(
           <p>{{ task.service }}</p>
           <p>{{ task.cost }} ₽</p>
         </div>
-      </div>
-
-      <!-- Нет задач -->
-      <div class="empty-content" v-else>
-        <p class="phoenix-accent-text base">
-          {{ t("diary.noTasks") }}
-        </p>
-        <button class="bordered flex" @click="makeWeekend">
-          <span class="material-icons little">event</span>
-          <p>{{ t("diary.makeWeekend") }}</p>
-          <span class="material-icons little"
-            >celebration</span
-          >
-        </button>
       </div>
     </div>
   </div>
@@ -232,7 +270,7 @@ watch(
   border-color: var(--primary);
 }
 
-.weekend-content {
+.none-tasks-content {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -250,7 +288,7 @@ watch(
 
 .tasks-header {
   display: grid;
-  grid-template-columns: 80px 100px 1fr 1fr 120px;
+  grid-template-columns: 20px repeat(4, 1fr);
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 0.5rem;
@@ -267,9 +305,27 @@ watch(
   font-size: 0.9rem;
 }
 
+.select-all-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.select-all-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.select-all-label {
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 .task-row {
   display: grid;
-  grid-template-columns: 80px 100px 1fr 1fr 120px;
+  grid-template-columns: 20px repeat(4, 1fr);
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 0.5rem;
@@ -288,22 +344,6 @@ input[type="checkbox"] {
   accent-color: var(--primary);
 }
 
-.empty-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 3rem;
-  text-align: center;
-  min-height: 200px;
-}
-
-.empty-content .base {
-  font-size: 1.2rem;
-  opacity: 0.7;
-}
-
 .bordered {
   padding: 7px 15px;
   border-radius: 12px;
@@ -315,7 +355,9 @@ input[type="checkbox"] {
 .flex {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
+  width: 300px;
 }
 
 .column {
@@ -336,7 +378,7 @@ input[type="checkbox"] {
 }
 
 .base {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 500;
 }
 
@@ -344,11 +386,10 @@ input[type="checkbox"] {
   font-size: 1.2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .day-wrapper {
     flex-direction: column;
   }
-
   .vertical-text {
     writing-mode: horizontal-tb;
     transform: none;
@@ -358,7 +399,7 @@ input[type="checkbox"] {
 
   .tasks-header,
   .task-row {
-    grid-template-columns: 60px 80px 1fr 1fr 100px;
+    grid-template-columns: 20px repeat(4, 1fr);
     gap: 0.5rem;
     font-size: 0.85rem;
   }
@@ -366,13 +407,31 @@ input[type="checkbox"] {
   .day {
     padding: 0.75rem;
   }
-}
 
+  .select-all-label {
+    font-size: 0.7rem;
+  }
+}
+/* 
 @media (max-width: 600px) {
   .tasks-header,
   .task-row {
-    grid-template-columns: 50px 70px 1fr 1fr 80px;
-    font-size: 0.75rem;
+    grid-template-columns: 20px repeat(4, 1fr);
+    font-size: 0.7rem;
+    gap: 0.3rem;
   }
-}
+
+  .select-all-wrap {
+    gap: 0.2rem;
+  }
+
+  .select-all-label {
+    font-size: 0.6rem;
+  }
+
+  input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+  }
+} */
 </style>
