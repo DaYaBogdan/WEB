@@ -212,9 +212,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <Sidebar />
   <main class="sidebarred">
+    <Sidebar />
     <div class="column">
+      <div class="header">
+        <h2 class="phoenix-accent-text">
+          {{ t("tasks.title") }}
+        </h2>
+        <p>{{ t("tasks.description") }}</p>
+      </div>
       <!-- Заголовок и управление -->
       <div class="grid-buttons">
         <div class="flex">

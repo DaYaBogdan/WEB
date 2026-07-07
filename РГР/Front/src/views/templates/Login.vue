@@ -20,13 +20,13 @@ const login = async () => {
     <form @submit.prevent="login">
       <div class="column">
         <input
-          class="bordered"
+          class="bordered login-input"
           placeholder="login"
           type="text"
           v-model="form.login"
         />
         <input
-          class="bordered"
+          class="bordered login-input"
           placeholder="password"
           type="password"
           v-model="form.password"
@@ -52,6 +52,15 @@ const login = async () => {
   align-items: center;
 }
 
+/* Переопределяем глобальные стили input только для логина */
+.login-input {
+  min-width: 280px !important;
+  max-width: 400px !important;
+  width: auto !important;
+  padding: 10px 16px !important;
+  font-size: 1rem;
+}
+
 .submit-button {
   height: 40px;
   width: 200px;
@@ -69,6 +78,17 @@ const login = async () => {
     display: flex;
     height: 100vh;
     align-items: center;
+  }
+
+  .login-input {
+    min-width: 200px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .submit-button {
+    width: 100%;
+    max-width: 200px;
   }
 }
 </style>

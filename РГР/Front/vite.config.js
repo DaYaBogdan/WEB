@@ -17,7 +17,7 @@ export default defineConfig({
         "phoenix_144x144.png",
         "phoenix_192x192.png",
         "phoenix_512x512.png",
-        "favicon.ico",
+        "phoenix.ico",
       ],
       manifest: {
         name: "Дневник",

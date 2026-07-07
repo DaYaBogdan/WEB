@@ -109,9 +109,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <Sidebar />
   <main class="sidebarred">
+    <Sidebar />
     <div class="column">
+      <div class="header">
+        <h2 class="phoenix-accent-text">
+          {{ t("clients.title") }}
+        </h2>
+        <p>{{ t("clients.description") }}</p>
+      </div>
       <div class="grid-buttons">
         <div class="flex">
           <button class="bordered flex" @click="openAddModal">

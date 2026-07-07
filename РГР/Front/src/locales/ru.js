@@ -1,15 +1,4 @@
 export default {
-  settings: {
-    title: "Настройки",
-    description: "Настройте внешний вид и язык интерфейса",
-    theme: "Тема оформления",
-    language: "Язык интерфейса",
-    light: "Светлая",
-    dark: "Тёмная",
-    save: "Сохранить",
-    cancel: "Отмена",
-    success: "Настройки успешно сохранены!",
-  },
   common: {
     add: "Добавить",
     delete: "Удалить",
@@ -23,17 +12,18 @@ export default {
     cancel: "Отмена",
     selectAll: "Выбрать все",
     clearAll: "Снять все",
+    menu: "Меню",
+    logout: "Выйти",
   },
   diary: {
     title: "Еженедельник",
+    description: "Добавляйте и изменяйте свои задачи",
     addTask: "Добавить",
     deleteTask: "Удалить",
     noTasks: "Нет клиентов",
     weekend: "Выходной",
     cancelWeekend: "Отменить выходной?",
     makeWeekend: "Выходной?",
-    prevWeek: "← Предыдущая",
-    nextWeek: "Следующая →",
     resetWeek: "Вернуться",
     table: {
       select: "Выбрать",
@@ -54,6 +44,7 @@ export default {
   },
   clients: {
     title: "Клиенты",
+    description: "Управляйте клиентской базой",
     addClient: "Добавить клиента",
     fio: "ФИО",
     phone: "Телефон",
@@ -61,6 +52,8 @@ export default {
   },
   masters: {
     title: "Мастера",
+    description:
+      "Добавляйте и редактируйте информацию о мастерах вашего салона",
     addMaster: "Добавить мастера",
     fio: "ФИО",
     login: "Логин",
@@ -74,6 +67,7 @@ export default {
   },
   tasks: {
     title: "Все записи",
+    description: "Просматривайте и удаляйте записи мастеров",
     addTask: "Добавить задачу",
     master: "Мастер",
     date: "Дата",
@@ -88,6 +82,17 @@ export default {
       date: "Фильтр по дате",
       clear: "Сбросить фильтры",
     },
+  },
+  settings: {
+    title: "Настройки",
+    description: "Настройте внешний вид и язык интерфейса",
+    theme: "Тема оформления",
+    language: "Язык интерфейса",
+    light: "Светлая",
+    dark: "Тёмная",
+    save: "Сохранить",
+    cancel: "Отмена",
+    success: "Настройки успешно сохранены!",
   },
   missing: {
     no_page: "В нашем реестре нет такой страницы",

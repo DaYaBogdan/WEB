@@ -53,7 +53,6 @@ const loadWeekends = async () => {
 };
 
 //---------------------WeekdaysLogic-------------------------------
-// Функция возврата названия дня недели по индексу (локализованная)
 const getWeekdayName = (dayIndex) => {
   const weekdays = [
     t("diary.weekdays.sunday"),
@@ -67,7 +66,6 @@ const getWeekdayName = (dayIndex) => {
   return weekdays[dayIndex];
 };
 
-// Форматирование даты: ДД.ММ
 const formatDate = (date) => {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -92,7 +90,6 @@ function getTasksForDay(tasksArray, currentDay) {
   });
 }
 
-// Вычисление дней недели
 const weekDays = computed(() => {
   const days = [];
   const current = new Date(referenceDate.value);
@@ -134,7 +131,6 @@ const weekDays = computed(() => {
   return days;
 });
 
-//---------------------NavigButtons-------------------------------
 const prevWeek = () => {
   const newDate = new Date(referenceDate.value);
   newDate.setDate(newDate.getDate() - 7);
@@ -151,7 +147,6 @@ const resetToToday = () => {
   referenceDate.value = new Date();
 };
 
-//---------------------MenuButtons-------------------------------
 const deleteSelectedTasks = async () => {
   try {
     await store.dispatch("deleteSelectedTasks");
@@ -177,91 +172,109 @@ onMounted(() => {
 </script>
 
 <template>
-  <Sidebar />
-  <main class="sidebarred">
-    <div class="column">
-      <!-- Навигационная панель -->
-      <div class="grid-buttons">
-        <!-- Кнопка добавления записи -->
-        <div class="flex">
-          <button class="bordered flex" @click="openAddModal">
-            <p class="phoenix-accent-text buttons-text">
-              {{ t("diary.addTask") }}
-            </p>
-            <span class="material-icons little">add</span>
-          </button>
+  <div class="diary-wrapper">
+    <Sidebar />
+    <main class="diary-content">
+      <div class="diary-inner">
+        <div class="header">
+          <h2 class="phoenix-accent-text">
+            {{ t("diary.title") }}
+          </h2>
+          <p>{{ t("diary.description") }}</p>
         </div>
 
-        <!-- Кнопка удаления записи -->
-        <div class="flex">
-          <button
-            class="bordered flex"
-            @click="deleteSelectedTasks"
-            :disabled="selectedCount === 0 || isLoading"
-          >
-            <p class="phoenix-accent-text buttons-text">
-              {{ t("diary.deleteTask") }}
-            </p>
-            <span class="material-icons little">delete</span>
-          </button>
+        <!-- Навигационная панель -->
+        <div class="grid-buttons">
+          <div class="flex">
+            <button
+              class="bordered flex"
+              @click="openAddModal"
+            >
+              <p class="phoenix-accent-text buttons-text">
+                {{ t("diary.addTask") }}
+              </p>
+              <span class="material-icons little">add</span>
+            </button>
+          </div>
+
+          <div class="flex">
+            <button
+              class="bordered flex"
+              @click="deleteSelectedTasks"
+              :disabled="selectedCount === 0 || isLoading"
+            >
+              <p class="phoenix-accent-text buttons-text">
+                {{ t("diary.deleteTask") }}
+              </p>
+              <span class="material-icons little">delete</span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <!-- Разделитель -->
-      <hr />
+        <hr />
 
-      <NewTask
-        v-if="showAddModal"
-        :masterId="currentMasterId"
-        @close="showAddModal = false"
-        @success="onTaskCreated"
-      />
-
-      <!-- Основное тело еженедельника -->
-      <div class="grid" v-if="!isLoading">
-        <Day
-          v-for="(day, index) in weekDays"
-          :key="index"
-          :day="day"
+        <NewTask
+          v-if="showAddModal"
+          :masterId="currentMasterId"
+          @close="showAddModal = false"
+          @success="onTaskCreated"
         />
-      </div>
-      <div v-else class="loading">
-        {{ t("common.loading") }}
-      </div>
 
-      <!-- Навигация между неделями -->
-      <div class="flex horizontal-align">
-        <button class="bordered" @click="prevWeek">
-          {{ t("diary.prevWeek") }}
-        </button>
-        <button class="bordered" @click="resetToToday">
-          {{ t("diary.resetWeek") }}
-        </button>
-        <button class="bordered" @click="nextWeek">
-          {{ t("diary.nextWeek") }}
-        </button>
+        <div class="grid" v-if="!isLoading">
+          <Day
+            v-for="(day, index) in weekDays"
+            :key="index"
+            :day="day"
+          />
+        </div>
+        <div v-else class="loading">
+          {{ t("common.loading") }}
+        </div>
+
+        <!-- Навигация между неделями - В ЛИНИЮ -->
+        <div class="nav-buttons">
+          <button class="bordered" @click="prevWeek">←</button>
+          <button class="bordered" @click="resetToToday">
+            {{ t("diary.resetWeek") }}
+          </button>
+          <button class="bordered" @click="nextWeek">→</button>
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+  </div>
 </template>
 
 <style lang="scss" scoped>
+.diary-wrapper {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.diary-content {
+  flex: 1;
+  padding: 2rem;
+  padding-bottom: 4rem;
+  margin-left: calc(2rem + 32px);
+  transition: margin-left 0.2s ease-out;
+  overflow-x: auto;
+}
+
+.diary-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100%;
+}
+
+:global(.app.sidebar-expanded) .diary-content {
+  margin-left: var(--sidebar-width);
+}
+
 .flex {
   display: flex;
   flex-direction: row;
   gap: 2em;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: calc(2rem + 32px);
-  padding: 2rem;
-  transition: margin-left 0.2s ease-out;
-}
-
-.horizontal-align {
-  text-align: center;
-  justify-content: center;
 }
 
 .grid-buttons {
@@ -273,6 +286,21 @@ onMounted(() => {
   padding: 7px;
 }
 
+/* Кнопки навигации В ЛИНИЮ */
+.nav-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 20px;
+  flex-wrap: wrap;
+}
+
+.nav-buttons button {
+  min-width: 120px;
+}
+
 @media (max-width: 900px) {
   .little {
     padding: 4px;
@@ -280,6 +308,21 @@ onMounted(() => {
   .grid-buttons {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+  }
+  .diary-content {
+    padding: 1rem;
+    padding-bottom: 6rem;
+    margin-left: 0 !important;
+  }
+
+  /* На мобилках кнопки тоже в линию, но с переносом */
+  .nav-buttons {
+    gap: 10px;
+  }
+
+  .nav-buttons button {
+    flex: 1;
+    min-width: 80px;
   }
 }
 </style>

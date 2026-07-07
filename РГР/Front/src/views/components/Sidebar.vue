@@ -2,6 +2,9 @@
 import {ref} from "vue";
 import {useStore} from "vuex";
 import {computed} from "vue";
+import {useI18n} from "vue-i18n";
+
+const {t} = useI18n();
 
 const store = useStore();
 
@@ -40,15 +43,15 @@ const logout = async () => {
       </button>
     </div>
     <div class="menu">
-      <h3>Меню</h3>
+      <h3>{{ t("common.menu") }}</h3>
       <RouterLink class="button" :to="{name: 'Diary'}">
         <span class="material-icons">home</span>
-        <span class="text">Главная страница</span>
+        <span class="text">{{ t("diary.title") }}</span>
       </RouterLink>
 
       <RouterLink class="button" :to="{name: 'Clients'}">
         <span class="material-icons">group</span>
-        <span class="text">Список клиентов</span>
+        <span class="text">{{ t("clients.title") }}</span>
       </RouterLink>
 
       <div v-if="adminPanelState">
@@ -56,22 +59,22 @@ const logout = async () => {
           <span class="material-icons"
             >supervisor_account</span
           >
-          <span class="text">Мастера</span>
+          <span class="text">{{ t("masters.title") }}</span>
         </RouterLink>
         <RouterLink class="button" :to="{name: 'AllTasks'}">
           <span class="material-icons">event_note</span>
-          <span class="text">Все записи</span>
+          <span class="text">{{ t("tasks.title") }}</span>
         </RouterLink>
       </div>
 
       <RouterLink class="button" :to="{name: 'Settings'}">
         <span class="material-icons">settings</span>
-        <span class="text">Настройки</span>
+        <span class="text">{{ t("settings.title") }}</span>
       </RouterLink>
 
       <button class="button logout" @click="logout">
         <span class="material-icons">logout</span>
-        <span class="text">Выход</span>
+        <span class="text">{{ t("common.logout") }}</span>
       </button>
     </div>
   </aside>
@@ -226,7 +229,7 @@ aside {
 
         .material-icons,
         .text {
-          color: var(--error);
+          color: var(--primary);
         }
       }
     }

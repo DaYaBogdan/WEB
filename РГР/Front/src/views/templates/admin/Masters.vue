@@ -106,9 +106,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <Sidebar />
   <main class="sidebarred">
+    <Sidebar />
     <div class="column">
+      <div class="header">
+        <h2 class="phoenix-accent-text">
+          {{ t("masters.title") }}
+        </h2>
+        <p>{{ t("masters.description") }}</p>
+      </div>
+
       <div class="grid-buttons">
         <div class="flex">
           <button class="bordered flex" @click="openAddModal">
@@ -152,8 +159,8 @@ onMounted(() => {
             <strong>{{ t("masters.role") }}</strong>
           </p>
           <!-- <p>
-            <strong>{{ t("common.edit") }}</strong>
-          </p> -->
+             <strong>{{ t("common.edit") }}</strong>
+           </p> -->
         </div>
 
         <div
@@ -229,7 +236,7 @@ onMounted(() => {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr) 20px;
+  grid-template-columns: 10px repeat(3, 1fr) 40px;
   gap: 1rem;
   align-items: center;
   padding: 0.75rem 0.5rem;

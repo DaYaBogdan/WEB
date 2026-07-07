@@ -126,10 +126,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <main>
-    <div class="settings-page sidebarred">
-      <Sidebar />
-      <div class="settings-content">
+  <div class="settings-wrapper">
+    <Sidebar />
+    <main class="settings-content">
+      <div class="settings-inner">
         <div class="settings-container">
           <Transition name="slide">
             <div
@@ -245,27 +245,38 @@ onMounted(() => {
           </div>
         </div>
       </div>
-    </div>
-  </main>
+    </main>
+  </div>
 </template>
 
 <style scoped>
-/* Ваши существующие стили остаются без изменений */
-.settings-page {
+.settings-wrapper {
+  display: flex;
   width: 100%;
+  min-height: 100vh;
 }
 
 .settings-content {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
   padding: 2rem;
+  padding-bottom: 4rem; /* ← Добавлен отступ снизу */
   margin-left: calc(2rem + 32px);
   transition: margin-left 0.2s ease-out;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
 }
 
+.settings-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+  justify-content: center;
+}
+
+/* Когда сайдбар расширен */
 :global(.app.sidebar-expanded) .settings-content {
   margin-left: var(--sidebar-width);
 }
@@ -277,6 +288,7 @@ onMounted(() => {
   border-radius: 16px;
   padding: 2rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
 }
 
 .slide-enter-active,
@@ -472,8 +484,9 @@ onMounted(() => {
 
 @media (max-width: 768px) {
   .settings-content {
-    margin-left: 0;
     padding: 1rem;
+    padding-bottom: 6rem; /* Больше отступ на мобилках */
+    margin-left: 0 !important;
   }
 
   .settings-container {

@@ -276,6 +276,19 @@ input[type="checkbox"] {
 
 <!-- Other -->
 <style lang="scss">
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  color: var(--grey);
+}
+
 .app {
   display: flex;
   min-height: 100vh;

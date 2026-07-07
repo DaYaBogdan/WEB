@@ -1,15 +1,4 @@
 export default {
-  settings: {
-    title: "Settings",
-    description: "Customize appearance and interface language",
-    theme: "Theme",
-    language: "Language",
-    light: "Light",
-    dark: "Dark",
-    save: "Save",
-    cancel: "Cancel",
-    success: "Settings saved successfully!",
-  },
   common: {
     add: "Add",
     delete: "Delete",
@@ -23,17 +12,18 @@ export default {
     cancel: "Cancel",
     selectAll: "Select all",
     clearAll: "Clear all",
+    menu: "Menu",
+    logout: "Logout",
   },
   diary: {
-    title: "Weekly diary",
+    title: "Diary",
+    description: "Manage your tasks",
     addTask: "Add task",
     deleteTask: "Delete task",
     noTasks: "No tasks",
     weekend: "Weekend",
     cancelWeekend: "Cancel weekend?",
     makeWeekend: "Weekend?",
-    prevWeek: "← Previous",
-    nextWeek: "Next →",
     resetWeek: "Reset",
     table: {
       select: "Select",
@@ -54,6 +44,7 @@ export default {
   },
   clients: {
     title: "Clients",
+    description: "Manage client base",
     addClient: "Add client",
     fio: "Full name",
     phone: "Phone",
@@ -61,6 +52,7 @@ export default {
   },
   masters: {
     title: "Masters",
+    description: "Manage your workers   ",
     addMaster: "Add master",
     fio: "Full name",
     login: "Login",
@@ -74,6 +66,7 @@ export default {
   },
   tasks: {
     title: "All tasks",
+    description: "Manage your workers tasks",
     addTask: "Add task",
     master: "Master",
     date: "Date",
@@ -88,6 +81,17 @@ export default {
       date: "Filter by date",
       clear: "Clear filters",
     },
+  },
+  settings: {
+    title: "Settings",
+    description: "Customize appearance and interface language",
+    theme: "Theme",
+    language: "Language",
+    light: "Light",
+    dark: "Dark",
+    save: "Save",
+    cancel: "Cancel",
+    success: "Settings saved successfully!",
   },
   missing: {
     no_page: "There is no page with this URL",
