@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.database import engine, AsyncSessionLocal
+from app.db.database import engine, AsyncSessionLocal
 from app.api.apiRouter import api_router
 
 
@@ -18,7 +18,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["http://localhost:5173"],  # Адрес вашего Vite сервера
+    # allow_origins=["http://localhost:5173"],
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],

@@ -90,7 +90,6 @@
             placeholder="Например: 2000"
             required
             min="0"
-            step="100"
             :class="{error: errors.cost}"
           />
           <span v-if="errors.cost" class="error-text">{{
@@ -142,7 +141,6 @@ const customers = computed(
   () => store.getters.getCustomers || [],
 );
 
-// Форма
 const form = ref({
   customer_id: "",
   service: "",
@@ -151,18 +149,15 @@ const form = ref({
   cost: "",
 });
 
-// Ошибки валидации
 const errors = ref({});
 const isLoading = ref(false);
 
-// Загружаем клиентов если их нет
 onMounted(async () => {
   if (customers.value.length === 0) {
     await store.dispatch("getClients");
   }
 });
 
-// Валидация формы
 const validateForm = () => {
   const newErrors = {};
 
@@ -206,19 +201,16 @@ const validateForm = () => {
   return Object.keys(newErrors).length === 0;
 };
 
-// Отправка формы
 const submitForm = async () => {
   if (!validateForm()) return;
 
   isLoading.value = true;
 
   try {
-    // Формируем datetime из date и time
     const dateTime = new Date(
       `${form.value.date}T${form.value.time}`,
     );
 
-    // Создаем объект задачи
     const taskData = {
       customer_id: parseInt(form.value.customer_id),
       master_id: props.masterId,
@@ -227,10 +219,8 @@ const submitForm = async () => {
       cost: parseInt(form.value.cost),
     };
 
-    // Отправляем запрос на сервер
     const response = await api.createTask(taskData);
 
-    // Успех - закрываем модалку и обновляем список
     emit("success", response.data);
     closeModal();
   } catch (error) {
@@ -247,7 +237,6 @@ const submitForm = async () => {
   }
 };
 
-// Закрытие модального окна
 const closeModal = () => {
   emit("close");
 };

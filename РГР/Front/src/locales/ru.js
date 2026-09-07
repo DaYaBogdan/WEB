@@ -20,6 +20,7 @@ export default {
     description: "Добавляйте и изменяйте свои задачи",
     addTask: "Добавить",
     deleteTask: "Удалить",
+    complete: "Завершить",
     noTasks: "Нет клиентов",
     weekend: "Выходной",
     cancelWeekend: "Отменить выходной?",
@@ -119,5 +120,7 @@ export default {
       phoneregex:
         "Вводите телефон в данном формате: +7XXXXXXXXXX (10 символов после +7)",
     },
+    weekendError:
+      "Невозможно создать выходной, попробуйте позже",
   },
 };

@@ -20,6 +20,7 @@ export default {
     description: "Manage your tasks",
     addTask: "Add task",
     deleteTask: "Delete task",
+    complete: "Complete task",
     noTasks: "No tasks",
     weekend: "Weekend",
     cancelWeekend: "Cancel weekend?",
@@ -119,5 +120,7 @@ export default {
       phoneregex:
         "Input phone in this format: +7XXXXXXXXXX (10 symbols after +7)",
     },
+    weekendError:
+      "Cannot create weekend, please try again later",
   },
 };

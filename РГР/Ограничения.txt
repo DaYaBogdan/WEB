@@ -1,0 +1,63 @@
+Ограничения по полям
+
+User -- +Back 
+	. fio -- min: 3, max: 255;
+	. login-- min: 3, max: 255;
+	. password -- min: 6, max: 255;
+
+Customer -- +Back
+	. masterID -- ;
+	. FIO -- min: 2, max: 255, validator;
+	. phone -- validator;
+	. email -- validator;
+
+Settings -- +Back +Front (Не нуждается в валидации на стороне пользователя)
+	. userID -- ;
+	. theme -- light|dark;
+	. language -- ru|en;
+
+Task -- +Back
+	. customer_id -- ;
+	. master_id -- ;
+	. service -- ;
+	. datetime -- datetime;
+	. cost -- min: 500, max: 5000;
+
+Weekend -- +Back
+	. master_id -- ;
+	. date -- date from datetime;
+
+Доступ ограничен отслеживанием роли на Frontend и JWT токенизацией на api endpoints
+--master
+	--к ресурсам:
+		. Diary
+		. Clients
+		. Settings
+
+	--к api endpoints:
+		. diary/pushTask
+		. diary/getTasks/${userID}
+		. diary/deleteTask/${taskId}
+		. managing/newClient
+		. managing/getAllClients/${masterID}
+		. managing/updateClient/${customer_id}
+		. managing/deleteClient/${id}
+		. diary/makeWeekend
+		. diary/getWeekends/${userID}
+		. diary/deleteWeekend/${weekend_id}
+		. settings/get/${user_id}
+		. settings/update/${user_id}
+		. diary/getAllTasks
+
+--admin
+	--к ресурсам:
+		. *
+	--к api endpoints:
+		. *
+		. auth/register
+		. managing/getAllClientsMaster/${masterID}
+		. masters/getAllMasters
+		. masters/getMaster/${masterID}
+		. masters/updateMaster/${masterID}
+		. masters/deleteMaster/${master_id}
+

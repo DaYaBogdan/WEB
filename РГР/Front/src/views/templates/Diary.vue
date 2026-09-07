@@ -155,6 +155,14 @@ const deleteSelectedTasks = async () => {
   }
 };
 
+const completeTasks = async () => {
+  try {
+    await store.dispatch("deleteSelectedTasks");
+  } catch (error) {
+    console.error("Delete failed:", error);
+  }
+};
+
 const openAddModal = () => {
   showAddModal.value = true;
 };
@@ -207,6 +215,19 @@ onMounted(() => {
                 {{ t("diary.deleteTask") }}
               </p>
               <span class="material-icons little">delete</span>
+            </button>
+          </div>
+
+          <div class="flex">
+            <button
+              class="bordered flex"
+              @click="openAddModal"
+              :disabled="selectedCount === 0 || isLoading"
+            >
+              <p class="phoenix-accent-text buttons-text">
+                {{ t("diary.complete") }}
+              </p>
+              <span class="material-icons little">check</span>
             </button>
           </div>
         </div>

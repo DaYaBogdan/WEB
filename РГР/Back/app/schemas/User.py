@@ -7,9 +7,9 @@ class LoginData(BaseModel):
     password: str
 
 class UserCreate(BaseModel):
-    fio: str = Field(..., min_length=3, max_length=50)
-    login: str = Field(..., min_length=3, max_length=50)
-    password: str = Field(..., min_length=6)
+    fio: str = Field(..., min_length=3, max_length=255)
+    login: str = Field(..., min_length=3, max_length=255)
+    password: str = Field(..., min_length=6, max_length=255)
 
 class UserResponse(BaseModel):
     id: int
@@ -20,12 +20,12 @@ class UserResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True   # для работы с SQLAlchemy моделями
-        
+        from_attributes = True
+    
 class UserUpdate(BaseModel):
-    fio: Optional[str] = Field(None, min_length=2, max_length=255)
-    login: Optional[str] = Field(None, min_length=3, max_length=50)
-    password: Optional[str] = Field(None, min_length=6)
+    fio: Optional[str] = Field(None, min_length=3, max_length=255)
+    login: Optional[str] = Field(None, min_length=3, max_length=255)
+    password: Optional[str] = Field(None, min_length=6, max_length=255)
     role: Optional[str] = Field(None, pattern="^(master|admin)$")
     
     @field_validator('login')

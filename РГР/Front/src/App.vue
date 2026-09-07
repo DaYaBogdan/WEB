@@ -11,6 +11,7 @@
 import {computed, onMounted} from "vue";
 import {useStore} from "vuex";
 import {useI18n} from "vue-i18n";
+import {authReady} from "@/store";
 
 const store = useStore();
 const {locale} = useI18n();
@@ -19,7 +20,6 @@ const isSidebarExpanded = computed(
 );
 const settings = computed(() => store.getters.getSettings);
 
-// Функция применения темы
 const applyTheme = (themeName) => {
   if (
     themeName &&
@@ -33,7 +33,6 @@ const applyTheme = (themeName) => {
   }
 };
 
-// Функция применения языка
 const applyLanguage = (language) => {
   if (language && (language === "ru" || language === "en")) {
     locale.value = language;
@@ -41,53 +40,43 @@ const applyLanguage = (language) => {
   }
 };
 
+const resolveTheme = (settingsObj) => {
+  if (settingsObj?.theme) return settingsObj.theme;
+  const saved = localStorage.getItem("userTheme");
+  return saved === "light" || saved === "dark" ?
+      saved
+    : "light";
+};
+
+const resolveLanguage = (settingsObj) => {
+  if (settingsObj?.language) return settingsObj.language;
+  const saved = localStorage.getItem("userLanguage");
+  return saved === "ru" || saved === "en" ? saved : "ru";
+};
+
 onMounted(async () => {
-  // 1. Сначала загружаем настройки с сервера
-  try {
-    await store.dispatch("getSettings");
-  } catch (error) {
-    console.error("Failed to load settings:", error);
-  }
+  applyTheme(resolveTheme(null));
+  applyLanguage(resolveLanguage(null));
 
-  // 2. Определяем тему
-  let theme = "light";
-
-  if (settings.value && settings.value.theme) {
-    theme = settings.value.theme;
-  } else {
-    const savedTheme = localStorage.getItem("userTheme");
-    if (
-      savedTheme &&
-      (savedTheme === "light" || savedTheme === "dark")
-    ) {
-      theme = savedTheme;
-    }
-  }
-
-  // 3. Определяем язык
-  let language = "ru";
-
-  if (settings.value && settings.value.language) {
-    language = settings.value.language;
-  } else {
-    const savedLanguage = localStorage.getItem("userLanguage");
-    if (
-      savedLanguage &&
-      (savedLanguage === "ru" || savedLanguage === "en")
-    ) {
-      language = savedLanguage;
-    }
-  }
-
-  // 4. Применяем настройки
-  applyTheme(theme);
-  applyLanguage(language);
-
-  // 5. Инициализация состояния sidebar
   const savedState =
     localStorage.getItem("is_expanded") === "true";
   if (savedState !== isSidebarExpanded.value && store.commit) {
     store.commit("TOGGLE_SIDEBAR");
+  }
+
+  // Wait for the SAME session-verification promise the router already
+  // triggered/awaited — not a second restoreSession dispatch.
+  await authReady;
+
+  if (store.getters.isLogged) {
+    try {
+      await store.dispatch("getSettings");
+    } catch (error) {
+      console.error("Failed to load settings:", error);
+    }
+
+    applyTheme(resolveTheme(settings.value));
+    applyLanguage(resolveLanguage(settings.value));
   }
 });
 </script>

@@ -2,7 +2,7 @@ import {createStore} from "vuex";
 import router from "@/router";
 import api from "@/api";
 
-export default createStore({
+const store = createStore({
   state: {
     user: (() => {
       const userStr = localStorage.getItem("user");
@@ -65,8 +65,10 @@ export default createStore({
     error: null,
   },
   getters: {
-    getID: (state) => state.user.id,
-    isLogged: (state) => !!state.user,
+    // NOTE: this will throw if state.user is null (e.g. logged out).
+    // Prefer getID below, or guard call sites with isLogged first.
+    getID: (state) => state.user?.id,
+    isLogged: (state) => !!state.user && !!state.token,
     userRole: (state) => state.user?.role || "guest",
     getTasks: (state) => state.tasks,
     getCustomers: (state) => state.customers,
@@ -168,13 +170,17 @@ export default createStore({
     LOGOUT(state) {
       state.user = null;
       state.token = null;
+      state.settings = null;
       state.tasks = [];
       state.customers = [];
+      state.weekends = [];
       state.selectedTaskIds = [];
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem("settings");
       localStorage.removeItem("tasks");
       localStorage.removeItem("customers");
+      localStorage.removeItem("weekends");
     },
   },
   actions: {
@@ -183,10 +189,15 @@ export default createStore({
       try {
         const response = await api.login(credentials);
 
-        const {user, settings, access_token} = response.data;
-        commit("SET_USER", user);
-        commit("SET_SETTINGS", settings);
+        // Backend /auth/login returns { access_token, token_type, user }
+        // (settings is optional - only destructure if your endpoint returns it)
+        const {user, access_token, settings} = response.data;
+
+        // IMPORTANT: set token BEFORE any other request so the axios
+        // interceptor can attach it if a subsequent call needs it.
         commit("SET_TOKEN", access_token);
+        commit("SET_USER", user);
+        if (settings) commit("SET_SETTINGS", settings);
 
         router.push("/Diary");
         return Promise.resolve(user);
@@ -195,21 +206,49 @@ export default createStore({
         return Promise.reject(error);
       }
     },
+    async register({commit}, credentials) {
+      try {
+        const response = await api.register(credentials);
+        return Promise.resolve(response.data);
+      } catch (error) {
+        console.error("Registration failed:", error);
+        return Promise.reject(error);
+      }
+    },
     async logout({commit}) {
       commit("LOGOUT");
       router.push("/");
     },
-    async restoreSession({commit}) {
+    async restoreSession({commit, dispatch}) {
       const token = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
+
+      if (!token || !storedUser) {
+        commit("LOGOUT");
+        return;
+      }
+
+      // Optimistically hydrate from localStorage so the UI doesn't flash
+      // logged-out, but immediately verify with the backend - a token
+      // sitting in localStorage could be expired, revoked, or (per your
+      // question) hand-edited by the user, and none of that is trustworthy
+      // until the server confirms it.
+      commit("SET_TOKEN", token);
+      commit("SET_USER", JSON.parse(storedUser));
+
       const storedTasks = localStorage.getItem("tasks");
-      if (token && storedUser) {
-        commit("SET_TOKEN", token);
-        commit("SET_USER", JSON.parse(storedUser));
-        if (storedTasks) {
-          commit("SET_TASKS", JSON.parse(storedTasks));
-        }
-      } else {
+      if (storedTasks) {
+        commit("SET_TASKS", JSON.parse(storedTasks));
+      }
+
+      try {
+        // Requires a GET /auth/me endpoint (see get_me in auth.py) that
+        // returns the user derived from the verified token payload.
+        const response = await api.getMe();
+        commit("SET_USER", response.data);
+      } catch (error) {
+        // Token invalid/expired/tampered -> the 401 interceptor will also
+        // catch this, but we clear state proactively here too.
         commit("LOGOUT");
       }
     },
@@ -329,12 +368,10 @@ export default createStore({
       commit("SET_ERROR", null);
 
       try {
-        // Удаляем клиентов ПОСЛЕДОВАТЕЛЬНО, а не параллельно
         for (const id of clientIds) {
           await api.deleteCustomer(id);
         }
 
-        // Перезагружаем список клиентов
         await dispatch("getClients");
 
         console.log(`Deleted ${clientIds.length} clients`);
@@ -360,17 +397,14 @@ export default createStore({
       commit("SET_ERROR", null);
 
       try {
-        // Удаляем все выбранные задачи
         await Promise.all(
           state.selectedTaskIds.map((id) =>
             api.deleteTask(id),
           ),
         );
 
-        // Перезагружаем задачи
         await dispatch("getTasks");
 
-        // Очищаем выбор
         commit("CLEAR_SELECTED_TASKS");
 
         console.log(
@@ -392,10 +426,8 @@ export default createStore({
           settingsData,
         );
 
-        // Обновляем store
         commit("UPDATE_SETTINGS", response.data);
 
-        // Сохраняем в localStorage
         if (settingsData.theme) {
           localStorage.setItem(
             "userTheme",
@@ -449,3 +481,9 @@ function addDateAndTimeToTasks(tasks) {
       : null,
   }));
 }
+
+export const authReady = store
+  .dispatch("restoreSession")
+  .catch(() => {});
+
+export default store;

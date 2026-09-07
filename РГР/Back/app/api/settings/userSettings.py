@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.database import get_db
+from app.db.database import get_db
 from app.models import Settings
 from app.schemas.Settings import SettingsResponse, SettingsUpdate
+from app.api.deps import require_role
+from app.models import User
 
 router = APIRouter()
 
@@ -11,7 +13,8 @@ router = APIRouter()
 @router.get("/get/{user_id}", response_model=SettingsResponse)
 async def get_settings(
     user_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     result = await db.execute(
         select(Settings).where(Settings.user_id == user_id)
@@ -36,7 +39,8 @@ async def get_settings(
 async def update_settings(
     user_id: int,
     settings_data: SettingsUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     # Ищем по user_id, а не по id
     result = await db.execute(

@@ -235,14 +235,13 @@ const closeModal = () => {
   emit("close");
 };
 
-// Инициализация формы для редактирования
 onMounted(() => {
   if (props.master) {
     isEdit.value = true;
     form.value = {
       fio: props.master.fio || "",
       login: props.master.login || "",
-      password: "", // Пароль не заполняем при редактировании
+      password: "",
       role: props.master.role || "master",
     };
   }

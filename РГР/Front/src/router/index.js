@@ -6,13 +6,7 @@ import Clients from "@/views/templates/Clients.vue";
 import Masters from "@/views/templates/admin/Masters.vue";
 import AllTasks from "@/views/templates/admin/AllTasks.vue";
 import Settings from "@/views/templates/Settings.vue";
-import store from "@/store";
-
-// Определение прав доступа для ролей
-const rolePermissions = {
-  admin: ["*"], // доступ ко всему
-  master: ["Diary", "Clients", "Settings"], // доступ только к этим маршрутам
-};
+import store, {authReady} from "@/store";
 
 const routes = [
   {
@@ -73,14 +67,19 @@ const router = createRouter({
   routes,
 });
 
-// Проверка доступа по роли
 function checkRoleAccess(userRole, allowedRoles) {
   if (!allowedRoles || allowedRoles.length === 0) return true;
-  if (userRole === "admin") return true; // админ имеет доступ ко всему
+  if (userRole === "admin") return true;
   return allowedRoles.includes(userRole);
 }
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+  // Wait for the initial session verification (GET /auth/me) to finish.
+  // On the very first navigation this actually waits for the network;
+  // on every navigation after that, authReady is already a resolved
+  // promise, so this returns immediately with no extra delay or request.
+  await authReady;
+
   const isLogged = store.getters.isLogged;
   const userRole = store.getters.userRole;
 
@@ -88,7 +87,6 @@ router.beforeEach((to, from, next) => {
     `Navigating to: ${to.name}, Role: ${userRole}, IsLogged: ${isLogged}`,
   );
 
-  // 1. Проверка авторизации
   if (to.meta.requiresAuth && !isLogged) {
     next({
       path: "/",
@@ -97,13 +95,11 @@ router.beforeEach((to, from, next) => {
     return;
   }
 
-  // 2. Перенаправление авторизованных с Login
   if (to.meta.guestOnly && isLogged) {
     next("/Diary");
     return;
   }
 
-  // 3. Проверка роли
   if (to.meta.requiresAuth && to.meta.allowedRoles) {
     const hasAccess = checkRoleAccess(
       userRole,
@@ -115,7 +111,6 @@ router.beforeEach((to, from, next) => {
         `Access denied for ${userRole} to ${to.name}`,
       );
 
-      // Перенаправляем на доступную страницу в зависимости от роли
       let fallbackPath = "/";
       if (userRole === "master") {
         fallbackPath = "/Diary";
@@ -131,13 +126,10 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // Все проверки пройдены
   next();
 });
 
-// Опционально: после каждого перехода
 router.afterEach((to, from) => {
-  // Можно добавить аналитику или изменение заголовка страницы
   if (to.meta.title) {
     document.title = to.meta.title;
   }

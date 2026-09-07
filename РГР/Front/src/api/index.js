@@ -1,9 +1,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL:
-    // import.meta.env.VITE_API_URL ||
-    "http://192.168.2.152:8000/api",
+  baseURL: "/api",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
@@ -11,9 +9,10 @@ const apiClient = axios.create({
 });
 
 //----------------------------------------------------------------------------
+// REQUEST interceptor: attach the token to every outgoing request
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,14 +22,33 @@ apiClient.interceptors.request.use(
 );
 
 //----------------------------------------------------------------------------
+// RESPONSE interceptor: auto-logout on expired/invalid token
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("settings");
+      localStorage.removeItem("tasks");
+      localStorage.removeItem("customers");
+      localStorage.removeItem("weekends");
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  },
+);
+
+//----------------------------------------------------------------------------
 export default {
-  // Логин
   login(credentials) {
     return apiClient.post("auth/login", credentials);
   },
-  // Регистрация
   register(credentials) {
     return apiClient.post("auth/register", credentials);
+  },
+  getMe() {
+    return apiClient.get("auth/me");
   },
   createTask(taskData) {
     return apiClient.post("diary/pushTask", taskData);
@@ -66,7 +84,6 @@ export default {
       customer_data,
     );
   },
-  // В api/index.js
   deleteCustomer(id) {
     return apiClient.delete(`managing/deleteClient/${id}`);
   },
@@ -82,14 +99,14 @@ export default {
     );
   },
   getMasters() {
-    return apiClient.get("masters/getAllMasters/");
+    return apiClient.get("masters/getAllMasters");
   },
   getMaster(masterID) {
-    return apiClient.get(`/masters/getMaster/${masterID}`);
+    return apiClient.get(`masters/getMaster/${masterID}`);
   },
   updateMaster(masterID, masterData) {
     return apiClient.put(
-      `/masters/updateMaster/${masterID}`,
+      `masters/updateMaster/${masterID}`,
       masterData,
     );
   },
@@ -103,11 +120,11 @@ export default {
   },
   updateSettings(user_id, settingsData) {
     return apiClient.put(
-      `settings/update/${user_id}`, // Теперь user_id передается правильно
+      `settings/update/${user_id}`,
       settingsData,
     );
   },
   getAllTasks() {
-    return apiClient.get("/diary/getAllTasks");
+    return apiClient.get("diary/getAllTasks");
   },
 };

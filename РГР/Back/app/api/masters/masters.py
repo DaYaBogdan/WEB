@@ -3,10 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from typing import List
-from app.database import get_db
+from app.db.database import get_db
 from app.models import User, Task, Settings
 from app.schemas.User import UserResponse, UserCreate, UserUpdate
-from app.security import get_password_hash
+from app.core.security import hash_password
+from app.api.deps import require_role
 
 router = APIRouter()
 
@@ -16,7 +17,8 @@ router = APIRouter()
 async def get_all_masters(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
 ):
     result = await db.execute(
         select(User).offset(skip).limit(limit).order_by(User.id)
@@ -28,7 +30,8 @@ async def get_all_masters(
 @router.get("/getMaster/{master_id}", response_model=UserResponse)
 async def get_master(
     master_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
 ):
     result = await db.execute(
         select(User).where(User.id == master_id)
@@ -42,47 +45,13 @@ async def get_master(
         )
     return master
 
-# POST - создать мастера
-@router.post("/addMaster", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-async def create_master(
-    master_data: UserCreate,
-    db: AsyncSession = Depends(get_db)
-):
-    # Проверяем существование логина
-    result = await db.execute(
-        select(User).where(User.login == master_data.login)
-    )
-    existing = result.scalar_one_or_none()
-    
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Login already registered"
-        )
-    
-    # Хешируем пароль
-    hashed_password = get_password_hash(master_data.password)
-    
-    # Создаем мастера
-    new_master = User(
-        fio=master_data.fio,
-        login=master_data.login,
-        password=hashed_password,
-        role=master_data.role if hasattr(master_data, 'role') else "master"
-    )
-    
-    db.add(new_master)
-    await db.commit()
-    await db.refresh(new_master)
-    
-    return new_master
-
 # PUT - обновить мастера
 @router.put("/updateMaster/{master_id}", response_model=UserResponse)
 async def update_master(
     master_id: int,
     master_data: UserUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
 ):
     result = await db.execute(
         select(User).where(User.id == master_id)
@@ -95,7 +64,6 @@ async def update_master(
             detail="Master not found"
         )
     
-    # Обновляем поля
     if master_data.fio is not None:
         master.fio = master_data.fio
     
@@ -103,7 +71,7 @@ async def update_master(
         master.role = master_data.role
     
     if master_data.password is not None and master_data.password.strip():
-        master.password = get_password_hash(master_data.password)
+        master.password = hash_password(master_data.password)
     
     await db.commit()
     await db.refresh(master)
@@ -114,7 +82,8 @@ async def update_master(
 @router.delete("/deleteMaster/{master_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_master(
     master_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
 ):
     result = await db.execute(
         select(User).where(User.id == master_id)
@@ -145,7 +114,8 @@ async def delete_master(
 @router.delete("/deleteMasters", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_masters(
     master_ids: List[int],
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
 ):
     if not master_ids:
         raise HTTPException(

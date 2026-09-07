@@ -11,4 +11,4 @@ class WeekendResponse(BaseModel):
     date: d
     
     class Config:
-        from_attributes = True  # для совместимости с SQLAlchemy
+        from_attributes = True

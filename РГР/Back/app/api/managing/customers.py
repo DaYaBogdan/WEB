@@ -2,9 +2,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from app.database import get_db
+from app.db.database import get_db
 from app.models.__init__ import Customer, Task, User
 from app.schemas.Customer import CustomerCreate, CustomerUpdate, CustomerResponse
+from app.api.deps import require_role
 
 router = APIRouter()
 
@@ -12,7 +13,8 @@ router = APIRouter()
 @router.post("/newClient", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
 async def create_customer(
     customer_data: CustomerCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     # Проверка на дубликат по телефону
     existing = await db.execute(
@@ -44,7 +46,8 @@ async def get_all_customers(
     masterID: int,
     skip: int = 0,
     limit: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     result = await db.execute(
         select(Customer).where(Customer.masterID == masterID).offset(skip).limit(limit).order_by(Customer.id)
@@ -58,7 +61,8 @@ async def get_all_customers(
     masterID: int,
     skip: int = 0,
     limit: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
 ):
     
     result = await db.execute(
@@ -80,7 +84,8 @@ async def get_all_customers(
 async def update_customer(
     customer_id: int,
     customer_data: CustomerUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     result = await db.execute(
         select(Customer).where(Customer.id == customer_id)
@@ -122,7 +127,8 @@ async def update_customer(
 @router.delete("/deleteClient/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_customer(
     customer_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     result = await db.execute(
         select(Customer).where(Customer.id == customer_id)

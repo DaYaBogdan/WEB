@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.database import get_db
+from app.db.database import get_db
+from app.api.deps import require_role
 
 from ...models import User, Weekend
 from app.schemas.Weekend import WeekendResponse, WeekendSchema
@@ -12,7 +13,8 @@ router = APIRouter()
 @router.post("/makeWeekend", response_model=WeekendResponse, status_code=status.HTTP_201_CREATED)
 async def makeWeekend(
     weekend_data: WeekendSchema,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     try:
         # Проверяем, существует ли master (user)
@@ -58,7 +60,8 @@ async def makeWeekend(
 @router.get("/getWeekends/{user_id}")
 async def getTasks(
     user_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     query = select(Weekend).where(Weekend.master_id == user_id)
     result = await db.execute(query)
@@ -69,7 +72,8 @@ async def getTasks(
 @router.delete("/deleteWeekend/{weekend_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     weekend_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     """Удаление задачи"""
     # Проверяем, существует ли задача

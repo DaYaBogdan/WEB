@@ -16,10 +16,10 @@ class TaskResponse(BaseModel):
     master_id: int
     service: str
     dateTime: datetime  
-    cost: int
+    cost: float = Field(..., ge=500, le=5000)
     
     class Config:
-        from_attributes = True  # Для Pydantic v2
+        from_attributes = True
 
 
 class TaskUpdate(BaseModel):
@@ -28,5 +28,5 @@ class TaskUpdate(BaseModel):
     master_id: Optional[int] = None
     service: Optional[str] = None
     dateTime: Optional[datetime] = None
-    cost: Optional[int] = None
+    cost: Optional[float] = Field(..., ge=500, le=5000)
     completed: Optional[bool] = None

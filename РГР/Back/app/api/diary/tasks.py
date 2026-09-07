@@ -3,7 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime, timezone, timedelta
 
-from app.database import get_db
+from app.db.database import get_db
+from app.api.deps import require_role
 
 from ...models import User, Task, Customer, Weekend
 from app.schemas.Task import TaskCreate, TaskResponse, TaskUpdate
@@ -14,18 +15,20 @@ router = APIRouter()
 async def getAllTasks(
     skip: int = 0,
     limit: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
                       ):
     query = select(Task).offset(skip).limit(limit).order_by(Task.dateTime)
     result = await db.execute(query)
-    tasks = result.scalars().all()  # используйте scalars() вместо all()
+    tasks = result.scalars().all()  
     
     return [TaskResponse.model_validate(task) for task in tasks]
 
 @router.post("/pushTask", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 async def pushTask(
     task_data: TaskCreate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     try:
         
@@ -93,7 +96,8 @@ async def pushTask(
 @router.get("/getTasks/{user_id}")
 async def getTasks(
     user_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     query = select(Task).where(Task.master_id == user_id).order_by(Task.dateTime)
     result = await db.execute(query)
@@ -105,7 +109,8 @@ async def getTasks(
 async def update_task(
     task_id: int,
     task_update: TaskUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     """Обновление задачи"""
     # Проверяем, существует ли задача
@@ -136,7 +141,8 @@ async def update_task(
 @router.delete("/deleteTask/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_task(
     task_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role("admin", "master"))
 ):
     """Удаление задачи"""
     # Проверяем, существует ли задача
